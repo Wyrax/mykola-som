@@ -1,0 +1,27 @@
+{
+  "name": "mykola-som",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && pagefind --site dist",
+    "preview": "astro preview",
+    "check": "astro check",
+    "import-docx": "node scripts/import-docx.mjs",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@fontsource-variable/literata": "^5.3.0",
+    "astro": "7.4.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "jszip": "^3.10.2",
+    "pagefind": "^1.6.0",
+    "typescript": "^5.9.0"
+  }
+}

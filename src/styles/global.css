@@ -1,0 +1,776 @@
+/*
+ * Одна типографічна система для віршів і прози.
+ * --line — одиниця вертикального ритму: усі відступи між блоками кратні їй.
+ */
+
+:root {
+  color-scheme: light;
+  --bg: #faf7f1;
+  --bg-raised: #f2ede3;
+  --text: #22201c;
+  --muted: #6c655a;
+  --accent: #8c3a2b;
+  --accent-hover: #6b2a1e;
+  --rule: #ddd4c4;
+  --icon-moon: block;
+  --icon-sun: none;
+
+  --font: 'Literata Variable', 'Literata', Georgia, 'Times New Roman', serif;
+  --fs: 1.125rem;
+  --lh: 1.65;
+  --line: calc(var(--fs) * var(--lh));
+  --measure: 34em;
+  --hang: 1.5em;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #161412;
+    --bg-raised: #211e1a;
+    --text: #e8e2d7;
+    --muted: #a69d8f;
+    --accent: #e3a48c;
+    --accent-hover: #f2c0ab;
+    --rule: #3a352e;
+    --icon-moon: none;
+    --icon-sun: block;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #161412;
+  --bg-raised: #211e1a;
+  --text: #e8e2d7;
+  --muted: #a69d8f;
+  --accent: #e3a48c;
+  --accent-hover: #f2c0ab;
+  --rule: #3a352e;
+  --icon-moon: none;
+  --icon-sun: block;
+}
+
+@media (max-width: 40rem) {
+  :root {
+    --fs: 1.0625rem;
+    --lh: 1.6;
+  }
+}
+
+/* ---------- Основа ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--fs);
+  line-height: var(--lh);
+  font-optical-sizing: auto;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+}
+
+main {
+  flex: 1;
+  padding: calc(var(--line) * 2) 1rem calc(var(--line) * 3);
+}
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+code {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 0.85em;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -10rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg-raised);
+  color: var(--text);
+  z-index: 10;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* ---------- Шапка і футер ---------- */
+
+.site-header {
+  width: 100%;
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1.25rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+}
+
+.site-title {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  font-size: 0.9375rem;
+}
+
+.site-nav a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.site-nav a:hover,
+.site-nav a[aria-current='page'] {
+  color: var(--text);
+}
+
+.site-nav a[aria-current='page'] {
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+}
+
+.theme-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+.theme-toggle .icon-moon {
+  display: var(--icon-moon);
+}
+
+.theme-toggle .icon-sun {
+  display: var(--icon-sun);
+}
+
+.site-footer {
+  padding: var(--line) 1rem;
+  border-top: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.site-footer p {
+  margin: 0;
+}
+
+/* ---------- Спільні елементи ---------- */
+
+.eyebrow,
+.section-title,
+.text-book {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.section-title {
+  margin: calc(var(--line) * 2) 0 var(--line);
+  text-align: center;
+}
+
+/* Зірочки: однакові для віршів без назви і для розділювачів сцен у прозі. */
+hr {
+  height: var(--line);
+  margin: var(--line) 0;
+  border: 0;
+  overflow: visible;
+  text-align: center;
+  color: var(--text);
+}
+
+hr::after {
+  content: '* * *';
+}
+
+hr::after,
+.text-title--untitled > [aria-hidden] {
+  letter-spacing: 0.4em;
+  padding-left: 0.4em;
+}
+
+/* ---------- Сторінка тексту ---------- */
+
+.text,
+.page {
+  max-width: var(--measure);
+  margin-inline: auto;
+}
+
+.text-header {
+  margin-bottom: calc(var(--line) * 1.5);
+  text-align: center;
+}
+
+.text-book {
+  margin: 0 0 var(--line);
+}
+
+.text-book a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.text-book a:hover {
+  color: var(--accent);
+}
+
+.text-title {
+  margin: 0;
+  font-size: 1.625rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.text-title--untitled {
+  font-weight: 400;
+}
+
+.text-subtitle {
+  margin: calc(var(--line) * 0.25) 0 0;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.dedication {
+  margin: calc(var(--line) * 0.5) 0 0;
+  font-size: 0.9375rem;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.epigraph {
+  width: fit-content;
+  max-width: min(22em, 85%);
+  margin: var(--line) 0 0 auto;
+  font-size: 0.9375rem;
+  font-style: italic;
+  text-align: left;
+}
+
+.epigraph p {
+  margin: 0;
+  white-space: pre-line;
+}
+
+.epigraph footer {
+  margin-top: 0.25em;
+  font-style: normal;
+  color: var(--muted);
+  text-align: right;
+}
+
+.epigraph footer::before {
+  content: '— ';
+}
+
+.signature {
+  margin: var(--line) 0 0;
+  font-size: 0.9375rem;
+  font-style: italic;
+  color: var(--muted);
+  text-align: right;
+}
+
+.signature p {
+  margin: 0;
+  text-indent: 0;
+}
+
+.signature-author {
+  font-style: normal;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.06em;
+  color: var(--text);
+}
+
+.text-note {
+  margin: calc(var(--line) * 1.5) 0 0;
+  padding-top: calc(var(--line) * 0.5);
+  border-top: 1px solid var(--rule);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--muted);
+  white-space: pre-line;
+}
+
+.toc-author {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Вірш: блок завширшки з найдовший рядок, по центру колонки. */
+.verse {
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  hyphens: manual;
+}
+
+.stanza {
+  margin: 0;
+}
+
+.stanza + .stanza {
+  margin-top: var(--line);
+}
+
+/* Підзаголовок частини: номер частини або назва вірша в циклі. */
+.verse-part {
+  margin: calc(var(--line) * 1.5) 0 calc(var(--line) * 0.5);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: var(--lh);
+  text-align: center;
+}
+
+.verse > .verse-part:first-child {
+  margin-top: 0;
+}
+
+.verse-part-subtitle {
+  margin: calc(var(--line) * -0.5) 0 calc(var(--line) * 0.5);
+  font-size: 0.9375rem;
+  font-style: italic;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Довгий рядок переноситься з висячим відступом; пробіли на початку зберігаються. */
+.line {
+  display: block;
+  padding-left: var(--hang);
+  text-indent: calc(-1 * var(--hang));
+  white-space: pre-wrap;
+}
+
+/* Проза: абзаци з відступом першого рядка, без проміжків. */
+.prose {
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  text-wrap: pretty;
+}
+
+.prose p {
+  margin: 0;
+  text-indent: 1.5em;
+}
+
+.prose > p:first-child,
+.prose > :is(h2, h3, hr, blockquote, ul, ol, .verse) + p,
+.prose--center p,
+.prose .signature p {
+  text-indent: 0;
+}
+
+.prose--center {
+  text-align: center;
+}
+
+.prose h2,
+.prose h3 {
+  margin: calc(var(--line) * 1.5) 0 var(--line);
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.prose blockquote {
+  margin: var(--line) 0 var(--line) var(--hang);
+  font-size: 0.9375rem;
+}
+
+.prose ul,
+.prose ol {
+  margin: var(--line) 0;
+}
+
+.verse--inset {
+  margin-block: var(--line);
+}
+
+/* Навігація попередній / наступний. */
+.text-nav {
+  max-width: var(--measure);
+  margin: calc(var(--line) * 2.5) auto 0;
+  padding-top: var(--line);
+  border-top: 1px solid var(--rule);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+.text-nav a {
+  text-decoration: none;
+}
+
+.text-nav-prev a,
+.text-nav-next a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+  color: var(--text);
+}
+
+.text-nav-next {
+  text-align: right;
+}
+
+.text-nav-label {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.text-nav a:hover .text-nav-title {
+  color: var(--accent);
+}
+
+.text-nav-book {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 40rem) {
+  .text-nav {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .text-nav-book {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: center;
+  }
+}
+
+/* ---------- Головна ---------- */
+
+.hero {
+  text-align: center;
+  margin: var(--line) 0 calc(var(--line) * 2.5);
+}
+
+.hero-title {
+  margin: 0;
+  font-size: clamp(2.25rem, 7vw, 3.25rem);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+}
+
+.hero-tagline {
+  margin: calc(var(--line) * 0.5) 0 0;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.books {
+  max-width: var(--measure);
+  margin-inline: auto;
+}
+
+.book-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.book-list > li + li {
+  border-top: 1px solid var(--rule);
+}
+
+.book-card {
+  padding: var(--line) 0;
+  text-align: center;
+}
+
+.book-card--cover {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  text-align: left;
+}
+
+.book-card-cover {
+  width: 100%;
+  height: auto;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.15);
+}
+
+.book-card .eyebrow {
+  margin: 0 0 0.35rem;
+}
+
+.book-card-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.book-card-title a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.book-card-title a:hover {
+  color: var(--accent);
+}
+
+.book-card-subtitle,
+.book-card-description {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+}
+
+.book-card-subtitle {
+  font-style: italic;
+}
+
+/* ---------- Сторінка книги ---------- */
+
+.book {
+  max-width: var(--measure);
+  margin-inline: auto;
+}
+
+.book-header {
+  text-align: center;
+}
+
+.book-header .eyebrow {
+  margin: 0 0 0.5rem;
+}
+
+.book-title {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 2.5rem);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.book-subtitle {
+  margin: 0.5rem 0 0;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.book-description {
+  max-width: 30em;
+  margin: var(--line) auto 0;
+  color: var(--muted);
+}
+
+.book-jump {
+  margin: var(--line) 0 0;
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.draft-note {
+  margin: var(--line) auto 0;
+  padding: 0.5rem 1rem;
+  max-width: 30em;
+  border: 1px dashed var(--muted);
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.toc,
+.alpha-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.toc li,
+.alpha-group li {
+  padding: 0.15em 0 0.15em var(--hang);
+  text-indent: calc(-1 * var(--hang));
+  line-height: 1.45;
+}
+
+.toc a,
+.alpha-group a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.toc a:hover,
+.alpha-group a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.alpha-index {
+  columns: 2 16em;
+  column-gap: 2.5rem;
+}
+
+.alpha-group {
+  break-inside: avoid;
+  margin-bottom: calc(var(--line) * 0.75);
+}
+
+.alpha-letter {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* ---------- Пошук ---------- */
+
+#search {
+  --pagefind-ui-font: var(--font);
+  --pagefind-ui-text: var(--text);
+  --pagefind-ui-background: var(--bg);
+  --pagefind-ui-border: var(--rule);
+  --pagefind-ui-primary: var(--accent);
+  --pagefind-ui-tag: var(--bg-raised);
+  --pagefind-ui-border-width: 1px;
+  --pagefind-ui-border-radius: 6px;
+  --pagefind-ui-scale: 0.85;
+}
+
+.search-unavailable {
+  color: var(--muted);
+  text-align: center;
+}
+
+/* ---------- Друк ---------- */
+
+@media print {
+  :root,
+  :root[data-theme='dark'],
+  :root:not([data-theme='light']) {
+    color-scheme: light;
+    --bg: #fff;
+    --bg-raised: #fff;
+    --text: #000;
+    --muted: #333;
+    --accent: #000;
+    --rule: #999;
+    --fs: 11.5pt;
+    --lh: 1.5;
+  }
+
+  @page {
+    margin: 2cm 2cm 2.5cm;
+  }
+
+  .site-header,
+  .site-footer,
+  .skip-link,
+  .text-nav,
+  .text-book,
+  .book-jump,
+  .draft-note,
+  .page--search {
+    display: none !important;
+  }
+
+  main {
+    padding: 0;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .text-header,
+  .section-title,
+  .alpha-letter {
+    break-after: avoid;
+  }
+
+  .stanza,
+  .epigraph,
+  .signature,
+  .alpha-group,
+  .prose blockquote {
+    break-inside: avoid;
+  }
+
+  .prose p {
+    orphans: 3;
+    widows: 3;
+  }
+}

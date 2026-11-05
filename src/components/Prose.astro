@@ -1,0 +1,15 @@
+---
+import { transformVerseBlocks } from '../lib/verse';
+
+interface Props {
+  /** Готовий HTML тексту (entry.rendered.html). */
+  html: string;
+}
+
+const html = transformVerseBlocks(Astro.props.html);
+---
+
+<div class="prose">
+  <Fragment set:html={html} />
+  <slot />
+</div>

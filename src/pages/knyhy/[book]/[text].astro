@@ -1,0 +1,66 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
+import Base from '../../../layouts/Base.astro';
+import TextHeader from '../../../components/TextHeader.astro';
+import Poem from '../../../components/Poem.astro';
+import Prose from '../../../components/Prose.astro';
+import TextSignature from '../../../components/TextSignature.astro';
+import TextNav from '../../../components/TextNav.astro';
+import { getLibrary, textKind, textSlug, type Text } from '../../../lib/library';
+import { pagefindValue } from '../../../lib/pagefind';
+import { bookUrl, textUrl } from '../../../lib/urls';
+import { SITE } from '../../../site';
+
+export const getStaticPaths = (async () => {
+  const library = await getLibrary();
+  const manyBooks = library.length > 1;
+  return library.flatMap(({ book, texts }) =>
+    texts.map((text, i) => ({
+      params: { book: book.id, text: textSlug(text) },
+      props: { book, text, prev: texts[i - 1], next: texts[i + 1], manyBooks },
+    })),
+  );
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { book, text, prev, next, manyBooks } = Astro.props;
+const kind = textKind(text, book);
+const data = text.data;
+const link = (t: Text | undefined) => t && { href: textUrl(book.id, textSlug(t)), title: t.data.title };
+const searchTitle = manyBooks ? `${data.title} · ${book.data.title}` : data.title;
+---
+
+<Base title={data.title} description={`${data.title}. ${SITE.author}, «${book.data.title}».`}>
+  <article
+    class="text"
+    data-kind={kind}
+    data-pagefind-body
+    data-pagefind-filter={pagefindValue('книга', book.data.title)}
+    data-pagefind-meta={pagefindValue('title', searchTitle)}
+  >
+    <TextHeader
+      title={data.title}
+      untitled={data.untitled}
+      subtitle={data.subtitle}
+      dedication={data.dedication}
+      epigraph={data.epigraph}
+      epigraphSource={data.epigraphSource}
+      bookTitle={book.data.title}
+      bookHref={bookUrl(book.id)}
+    />
+    {
+      kind === 'poem' ? (
+        <Poem body={text.body ?? ''}>
+          <TextSignature author={data.author} date={data.date} place={data.place} />
+        </Poem>
+      ) : (
+        <Prose html={text.rendered?.html ?? ''}>
+          <TextSignature author={data.author} date={data.date} place={data.place} />
+        </Prose>
+      )
+    }
+    {data.note && <p class="text-note">{data.note}</p>}
+  </article>
+  <TextNav prev={link(prev)} next={link(next)} book={{ href: bookUrl(book.id), title: book.data.title }} />
+</Base>

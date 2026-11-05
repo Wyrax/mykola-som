@@ -1,0 +1,38 @@
+---
+interface Props {
+  title: string;
+  untitled?: boolean;
+  subtitle?: string;
+  dedication?: string;
+  epigraph?: string;
+  epigraphSource?: string;
+  bookTitle: string;
+  bookHref: string;
+}
+
+const { title, untitled, subtitle, dedication, epigraph, epigraphSource, bookTitle, bookHref } = Astro.props;
+---
+
+<header class="text-header">
+  <p class="text-book" data-pagefind-ignore><a href={bookHref}>{bookTitle}</a></p>
+  {
+    untitled ? (
+      <h1 class="text-title text-title--untitled">
+        <span aria-hidden="true">* * *</span>
+        <span class="visually-hidden">{title}</span>
+      </h1>
+    ) : (
+      <h1 class="text-title">{title}</h1>
+    )
+  }
+  {subtitle && <p class="text-subtitle">{subtitle}</p>}
+  {dedication && <p class="dedication">{dedication}</p>}
+  {
+    epigraph && (
+      <blockquote class="epigraph">
+        <p>{epigraph}</p>
+        {epigraphSource && <footer>{epigraphSource}</footer>}
+      </blockquote>
+    )
+  }
+</header>

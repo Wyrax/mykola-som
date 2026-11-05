@@ -1,0 +1,57 @@
+---
+import '@fontsource-variable/literata/opsz.css';
+import '@fontsource-variable/literata/opsz-italic.css';
+import '../styles/global.css';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import { SITE } from '../site';
+import { url } from '../lib/urls';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Пункт меню, який підсвічується як поточний. */
+  current?: 'about' | 'search';
+}
+
+const { title, description = SITE.description, current } = Astro.props;
+const fullTitle = title ? `${title} — ${SITE.title}` : `${SITE.title}. ${SITE.tagline}`;
+---
+
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title ?? SITE.title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content="uk_UA" />
+    <link rel="icon" type="image/svg+xml" href={url('favicon.svg')} />
+    <meta name="generator" content={Astro.generator} />
+    <script is:inline>
+      try {
+        const theme = localStorage.getItem('theme');
+        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Перейти до змісту сторінки</a>
+    <header class="site-header">
+      <a class="site-title" href={url()}>{SITE.title}</a>
+      <nav class="site-nav" aria-label="Головне меню">
+        <a href={url('pro-avtora/')} aria-current={current === 'about' ? 'page' : undefined}>Про автора</a>
+        <a href={url('poshuk/')} aria-current={current === 'search' ? 'page' : undefined}>Пошук</a>
+        <ThemeToggle />
+      </nav>
+    </header>
+    <main id="main">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <p>{SITE.author}. {SITE.tagline}</p>
+    </footer>
+  </body>
+</html>

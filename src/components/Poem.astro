@@ -1,0 +1,14 @@
+---
+import { parseVerse, verseHtml } from '../lib/verse';
+
+interface Props {
+  body: string;
+}
+
+const html = verseHtml(parseVerse(Astro.props.body));
+---
+
+<div class="verse">
+  <Fragment set:html={html} />
+  <slot />
+</div>

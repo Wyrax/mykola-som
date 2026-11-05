@@ -1,0 +1,38 @@
+---
+interface Link {
+  href: string;
+  title: string;
+}
+
+interface Props {
+  prev?: Link;
+  next?: Link;
+  book: Link;
+}
+
+const { prev, next, book } = Astro.props;
+---
+
+<nav class="text-nav" aria-label="Навігація книгою">
+  <div class="text-nav-prev">
+    {
+      prev && (
+        <a href={prev.href} rel="prev">
+          <span class="text-nav-label">← Попередній</span>
+          <span class="text-nav-title">{prev.title}</span>
+        </a>
+      )
+    }
+  </div>
+  <a class="text-nav-book" href={book.href}>Зміст</a>
+  <div class="text-nav-next">
+    {
+      next && (
+        <a href={next.href} rel="next">
+          <span class="text-nav-label">Наступний →</span>
+          <span class="text-nav-title">{next.title}</span>
+        </a>
+      )
+    }
+  </div>
+</nav>

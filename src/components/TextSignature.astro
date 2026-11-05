@@ -1,0 +1,19 @@
+---
+interface Props {
+  author?: string;
+  date?: string | number;
+  place?: string;
+}
+
+const { author, date, place } = Astro.props;
+const when = [place, date].filter((part) => part !== undefined && part !== '').join(', ');
+---
+
+{
+  (author || when) && (
+    <div class="signature">
+      {author && <p class="signature-author">{author}</p>}
+      {when && <p>{when}</p>}
+    </div>
+  )
+}

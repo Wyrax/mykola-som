@@ -1,0 +1,39 @@
+---
+import Base from '../layouts/Base.astro';
+import { url } from '../lib/urls';
+
+const bundle = url('pagefind/');
+---
+
+<Base title="Пошук" current="search">
+  <link slot="head" rel="stylesheet" href={`${bundle}pagefind-ui.css`} />
+  <div class="page page--search">
+    <header class="text-header">
+      <h1 class="text-title">Пошук</h1>
+    </header>
+    <div id="search"></div>
+    <p class="search-unavailable" hidden>
+      Пошук працює лише у зібраній версії сайту: <code>npm run build</code>, потім <code>npm run preview</code>.
+    </p>
+  </div>
+  <script is:inline define:vars={{ bundle }}>
+    const script = document.createElement('script');
+    script.src = bundle + 'pagefind-ui.js';
+    script.onload = () => {
+      // eslint-disable-next-line no-undef
+      const ui = new PagefindUI({
+        element: '#search',
+        bundlePath: bundle,
+        showSubResults: false,
+        showImages: false,
+        autofocus: true,
+      });
+      const query = new URLSearchParams(location.search).get('q');
+      if (query) ui.triggerSearch(query);
+    };
+    script.onerror = () => {
+      document.querySelector('.search-unavailable').hidden = false;
+    };
+    document.head.append(script);
+  </script>
+</Base>

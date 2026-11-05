@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+import { url } from '../lib/urls';
+---
+
+<Base title="Сторінку не знайдено">
+  <div class="page">
+    <header class="text-header">
+      <h1 class="text-title">Сторінку не знайдено</h1>
+    </header>
+    <div class="prose prose--center">
+      <p>
+        Можливо, адреса змінилася або в ній помилка. Спробуйте <a href={url()}>головну сторінку</a> чи
+        <a href={url('poshuk/')}>пошук</a>.
+      </p>
+    </div>
+  </div>
+</Base>

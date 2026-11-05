@@ -1,0 +1,84 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
+import Base from '../../../layouts/Base.astro';
+import { alphabeticalIndex, getLibrary, mainTextCount, textKind, textSlug } from '../../../lib/library';
+import { plural, TEXT_FORMS } from '../../../lib/plural';
+import { textUrl } from '../../../lib/urls';
+import { BOOK_KIND_LABEL, SITE } from '../../../site';
+
+export const getStaticPaths = (async () => {
+  const library = await getLibrary();
+  return library.map(({ book, texts }) => ({ params: { book: book.id }, props: { book, texts } }));
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { book, texts } = Astro.props;
+const { title, subtitle, kind, year, description, draft } = book.data;
+const poems = texts.filter((text) => textKind(text, book) === 'poem');
+const index = poems.length > 1 ? alphabeticalIndex(poems) : [];
+const meta = [BOOK_KIND_LABEL[kind], year, plural(mainTextCount(book, texts), TEXT_FORMS[kind])]
+  .filter(Boolean)
+  .join(' · ');
+---
+
+<Base title={title} description={description ?? `${SITE.author}. ${title}. ${meta}.`}>
+  <div class="book">
+    <header class="book-header">
+      <p class="eyebrow">{meta}</p>
+      <h1 class="book-title">{title}</h1>
+      {subtitle && <p class="book-subtitle">{subtitle}</p>}
+      {description && <p class="book-description">{description}</p>}
+      {
+        draft && (
+          <p class="draft-note">
+            Чернетка: ця книга видима лише в режимі розробки і не потрапляє на опублікований сайт.
+          </p>
+        )
+      }
+      {
+        index.length > 0 && (
+          <p class="book-jump">
+            <a href="#zmist">Зміст</a> · <a href="#pokazhchyk">Алфавітний покажчик</a>
+          </p>
+        )
+      }
+    </header>
+
+    <section aria-labelledby="zmist">
+      <h2 id="zmist" class="section-title">Зміст</h2>
+      <ol class="toc">
+        {
+          texts.map((text) => (
+            <li>
+              <a href={textUrl(book.id, textSlug(text))}>{text.data.title}</a>
+              {text.data.author && <span class="toc-author"> — {text.data.author}</span>}
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    {
+      index.length > 0 && (
+        <section aria-labelledby="pokazhchyk">
+          <h2 id="pokazhchyk" class="section-title">Алфавітний покажчик</h2>
+          <div class="alpha-index">
+            {index.map((group) => (
+              <div class="alpha-group">
+                <h3 class="alpha-letter">{group.letter}</h3>
+                <ul>
+                  {group.texts.map((text) => (
+                    <li>
+                      <a href={textUrl(book.id, textSlug(text))}>{text.data.title}</a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+      )
+    }
+  </div>
+</Base>
