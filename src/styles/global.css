@@ -88,6 +88,9 @@ body {
   font-kerning: normal;
   text-rendering: optimizeLegibility;
   overflow-wrap: break-word;
+  /* Переносів слів немає ніде: ні автоматичних, ні за м'якими переносами (U+00AD). */
+  hyphens: none;
+  -webkit-hyphens: none;
 }
 
 main {
@@ -377,7 +380,6 @@ hr::after,
   width: fit-content;
   max-width: 100%;
   margin-inline: auto;
-  hyphens: manual;
 }
 
 .stanza {
@@ -419,8 +421,6 @@ hr::after,
 
 /* Проза: абзаци з відступом першого рядка, без проміжків. */
 .prose {
-  hyphens: auto;
-  -webkit-hyphens: auto;
   text-wrap: pretty;
 }
 
