@@ -12,6 +12,7 @@
   --accent: #8c3a2b;
   --accent-hover: #6b2a1e;
   --rule: #ddd4c4;
+  --mark: #f1dfa6;
   --icon-moon: block;
   --icon-sun: none;
 
@@ -33,6 +34,7 @@
     --accent: #e3a48c;
     --accent-hover: #f2c0ab;
     --rule: #3a352e;
+    --mark: #5c4a1e;
     --icon-moon: none;
     --icon-sun: block;
   }
@@ -47,6 +49,7 @@
   --accent: #e3a48c;
   --accent-hover: #f2c0ab;
   --rule: #3a352e;
+  --mark: #5c4a1e;
   --icon-moon: none;
   --icon-sun: block;
 }
@@ -707,6 +710,12 @@ hr::after,
   --pagefind-ui-border-width: 1px;
   --pagefind-ui-border-radius: 6px;
   --pagefind-ui-scale: 0.85;
+}
+
+#search mark {
+  background: var(--mark);
+  color: inherit;
+  border-radius: 2px;
 }
 
 .search-unavailable {
