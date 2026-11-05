@@ -20,3 +20,6 @@ Thumbs.db
 
 # originals of the books (.docx): not published
 _source/
+
+# local tool settings
+.claude/
