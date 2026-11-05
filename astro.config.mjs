@@ -3,7 +3,8 @@ import { defineConfig } from 'astro/config';
 
 // https://astro.build/config
 export default defineConfig({
-  // site: 'https://<логін>.github.io' — додається на кроці публікації
+  // Сайт публікується на GitHub Pages: https://wyrax.github.io/mykola-som/
+  site: 'https://wyrax.github.io',
   base: '/mykola-som',
   markdown: {
     // Блоки ```verse у прозі перетворюються на вірш (див. src/lib/verse.ts),
