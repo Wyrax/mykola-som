@@ -11,10 +11,17 @@ interface Props {
   description?: string;
   /** Пункт меню, який підсвічується як поточний. */
   current?: 'about' | 'search';
+  /** Не індексувати сторінку пошуковиками (сторінка 404). */
+  noindex?: boolean;
 }
 
-const { title, description = SITE.description, current } = Astro.props;
+const { title, description = SITE.description, current, noindex = false } = Astro.props;
 const fullTitle = title ? `${title} — ${SITE.title}` : `${SITE.title}. ${SITE.tagline}`;
+
+// Канонічна адреса: повний URL сторінки, завжди з кінцевою «/», як у карті сайту.
+const { pathname } = Astro.url;
+const canonicalPath = pathname.endsWith('/') || /\.\w+$/.test(pathname) ? pathname : `${pathname}/`;
+const canonical = Astro.site && !noindex ? new URL(canonicalPath, Astro.site).href : undefined;
 ---
 
 <!doctype html>
@@ -24,9 +31,13 @@ const fullTitle = title ? `${title} — ${SITE.title}` : `${SITE.title}. ${SITE.
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    {noindex && <meta name="robots" content="noindex" />}
     <meta property="og:title" content={title ?? SITE.title} />
     <meta property="og:description" content={description} />
     <meta property="og:locale" content="uk_UA" />
+    {canonical && <meta property="og:url" content={canonical} />}
+    <link rel="sitemap" href={url('sitemap-index.xml')} />
     <link rel="icon" type="image/svg+xml" href={url('favicon.svg')} />
     <meta name="generator" content={Astro.generator} />
     <script is:inline>
