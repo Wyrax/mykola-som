@@ -99,6 +99,7 @@ npm run import-docx -- --book <назва-латиницею> _source/<файл>
 - Карта сайту створюється автоматично під час збирання: https://wyrax.github.io/mykola-som/sitemap-index.xml. До неї потрапляють усі опубліковані сторінки, крім пошуку, 404 і чернеток.
 - Кожна сторінка має канонічну адресу (`<link rel="canonical">`); сторінка 404 позначена `noindex`.
 - `robots.txt` для сайту на `wyrax.github.io/mykola-som/` пошуковики не читають (він мав би лежати в корені домену), тож карту сайту треба надіслати вручну: Google Search Console → ресурс «URL-префікс» `https://wyrax.github.io/mykola-som/` → «Файли Sitemap» → `sitemap-index.xml`. Так само в Bing Webmaster Tools.
+- `public/googleec3764e8b6a9dded.html` — файл підтвердження права власності в Google Search Console. Не видаляйте його, інакше Google втратить доступ до ресурсу.
 
 ## Інше
 
