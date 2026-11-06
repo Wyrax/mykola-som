@@ -23,3 +23,6 @@ _source/
 
 # local tool settings
 .claude/
+
+# todo
+_todo/
