@@ -1,39 +1,165 @@
 ---
 import Base from '../layouts/Base.astro';
 import { url } from '../lib/urls';
-
-const bundle = url('pagefind/');
 ---
 
 <Base title="Пошук" current="search">
-  <link slot="head" rel="stylesheet" href={`${bundle}pagefind-ui.css`} />
   <div class="page page--search">
     <header class="text-header">
       <h1 class="text-title">Пошук</h1>
     </header>
-    <div id="search"></div>
+    <form class="search-form" id="search-form" role="search" data-bundle={url('pagefind/')} data-base={url()}>
+      <label class="visually-hidden" for="search-input">Слово або рядок із твору</label>
+      <input
+        class="search-input"
+        id="search-input"
+        type="search"
+        name="q"
+        placeholder="Слово або рядок із твору"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <select class="search-book" id="search-book" name="book" aria-label="Книга" hidden>
+        <option value="">Усі книги</option>
+      </select>
+    </form>
+    <p class="search-hint">Шукаються слова, що починаються з введеного: «карас» знайде і «карась», і «карасів».</p>
+    <p class="search-status" id="search-status" role="status" aria-live="polite"></p>
+    <ol class="search-results" id="search-results"></ol>
     <p class="search-unavailable" hidden>
       Пошук працює лише у зібраній версії сайту: <code>npm run build</code>, потім <code>npm run preview</code>.
     </p>
   </div>
-  <script is:inline define:vars={{ bundle }}>
-    const script = document.createElement('script');
-    script.src = bundle + 'pagefind-ui.js';
-    script.onload = () => {
-      // eslint-disable-next-line no-undef
-      const ui = new PagefindUI({
-        element: '#search',
-        bundlePath: bundle,
-        showSubResults: false,
-        showImages: false,
-        autofocus: true,
-      });
-      const query = new URLSearchParams(location.search).get('q');
-      if (query) ui.triggerSearch(query);
-    };
-    script.onerror = () => {
-      document.querySelector('.search-unavailable').hidden = false;
-    };
-    document.head.append(script);
-  </script>
 </Base>
+
+<script>
+  import { matchesAllTerms, queryTerms, textWords } from '../lib/search-match';
+
+  interface ResultData {
+    url: string;
+    content: string;
+    excerpt: string;
+    meta: Record<string, string | undefined>;
+    filters: Record<string, string[] | undefined>;
+  }
+  interface SearchResponse {
+    results: { data(): Promise<ResultData> }[];
+  }
+  interface Pagefind {
+    options(options: Record<string, unknown>): Promise<void>;
+    filters(): Promise<Record<string, Record<string, number>>>;
+    debouncedSearch(term: string, options?: Record<string, unknown>, ms?: number): Promise<SearchResponse | null>;
+  }
+
+  const BOOK_FILTER = 'Книга';
+  const form = document.getElementById('search-form') as HTMLFormElement;
+  const input = document.getElementById('search-input') as HTMLInputElement;
+  const bookSelect = document.getElementById('search-book') as HTMLSelectElement;
+  const status = document.getElementById('search-status') as HTMLParagraphElement;
+  const list = document.getElementById('search-results') as HTMLOListElement;
+
+  const pluralRules = new Intl.PluralRules('uk');
+  const works = (n: number) => {
+    const category = pluralRules.select(n);
+    return `${n} ${category === 'one' ? 'твір' : category === 'few' ? 'твори' : 'творів'}`;
+  };
+
+  async function loadPagefind(): Promise<Pagefind | null> {
+    try {
+      const bundle = form.dataset.bundle!;
+      const pagefind = (await import(/* @vite-ignore */ `${bundle}pagefind.js`)) as Pagefind;
+      await pagefind.options({
+        basePath: bundle,
+        baseUrl: form.dataset.base,
+        excerptLength: 24,
+        // У «й» і «и», «ї» та «і» — різні літери, а не варіанти однієї.
+        exactDiacritics: true,
+      });
+      return pagefind;
+    } catch {
+      return null;
+    }
+  }
+
+  function render(found: ResultData[], showBook: boolean) {
+    status.textContent = found.length
+      ? `Знайдено ${works(found.length)}`
+      : 'Нічого не знайдено. Спробуйте інше слово або лише його початок.';
+    list.replaceChildren(
+      ...found.map((page) => {
+        const item = document.createElement('li');
+        item.className = 'search-result';
+        const link = document.createElement('a');
+        link.className = 'search-result-title';
+        link.href = page.url;
+        link.textContent = page.meta.title ?? page.url;
+        const excerpt = document.createElement('p');
+        excerpt.className = 'search-result-excerpt';
+        excerpt.innerHTML = page.excerpt; // текст сторінки, екранований Pagefind, з <mark> на збігах
+        item.append(link, excerpt);
+        const book = page.filters[BOOK_FILTER]?.[0];
+        if (showBook && book) {
+          const bookLine = document.createElement('p');
+          bookLine.className = 'search-result-book';
+          bookLine.textContent = book;
+          item.append(bookLine);
+        }
+        return item;
+      }),
+    );
+  }
+
+  async function main() {
+    const pagefind = await loadPagefind();
+    if (!pagefind) {
+      form.hidden = true;
+      document.querySelector<HTMLElement>('.search-hint')!.hidden = true;
+      document.querySelector<HTMLElement>('.search-unavailable')!.hidden = false;
+      return;
+    }
+
+    const books = Object.keys((await pagefind.filters())[BOOK_FILTER] ?? {}).sort((a, b) =>
+      a.localeCompare(b, 'uk'),
+    );
+    const showBook = books.length > 1;
+    if (showBook) {
+      bookSelect.append(...books.map((book) => new Option(book, book)));
+      bookSelect.hidden = false;
+    }
+
+    let latest = 0;
+    async function search() {
+      const query = input.value.trim().replace(/['ʼ`‘]/g, '’');
+      const id = ++latest;
+      history.replaceState(null, '', query ? `?q=${encodeURIComponent(query)}` : location.pathname);
+      if (!query) {
+        status.textContent = '';
+        list.replaceChildren();
+        return;
+      }
+      const book = bookSelect.value;
+      const response = await pagefind!.debouncedSearch(query, book ? { filters: { [BOOK_FILTER]: book } } : {}, 250);
+      if (!response || id !== latest) return;
+      const pages = await Promise.all(response.results.map((result) => result.data()));
+      if (id !== latest) return;
+      const terms = queryTerms(query);
+      render(
+        pages.filter((page) => matchesAllTerms(terms, textWords(`${page.meta.title ?? ''} ${page.content}`))),
+        showBook,
+      );
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      search();
+    });
+    input.addEventListener('input', search);
+    bookSelect.addEventListener('change', search);
+
+    input.value = new URLSearchParams(location.search).get('q') ?? '';
+    input.focus();
+    if (input.value) search();
+  }
+
+  main();
+</script>

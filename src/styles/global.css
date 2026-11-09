@@ -700,22 +700,103 @@ hr::after,
 
 /* ---------- Пошук ---------- */
 
-#search {
-  --pagefind-ui-font: var(--font);
-  --pagefind-ui-text: var(--text);
-  --pagefind-ui-background: var(--bg);
-  --pagefind-ui-border: var(--rule);
-  --pagefind-ui-primary: var(--accent);
-  --pagefind-ui-tag: var(--bg-raised);
-  --pagefind-ui-border-width: 1px;
-  --pagefind-ui-border-radius: 6px;
-  --pagefind-ui-scale: 0.85;
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
-#search mark {
+.search-form[hidden] {
+  display: none;
+}
+
+.search-input,
+.search-book {
+  font: inherit;
+  color: var(--text);
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+.search-input {
+  flex: 1 1 16rem;
+  min-width: 0;
+  padding: 0.6rem 0.9rem;
+}
+
+.search-input::placeholder {
+  color: var(--muted);
+}
+
+.search-input:focus-visible,
+.search-book:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.search-book {
+  padding: 0.6rem 0.75rem;
+  font-size: 0.9375rem;
+}
+
+.search-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.search-status {
+  margin: var(--line) 0 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.search-status:empty {
+  display: none;
+}
+
+.search-results {
+  list-style: none;
+  margin: calc(var(--line) * 0.5) 0 0;
+  padding: 0;
+}
+
+.search-result {
+  padding: calc(var(--line) * 0.75) 0;
+  border-top: 1px solid var(--rule);
+}
+
+.search-result-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.search-result-title:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.search-result-excerpt {
+  margin: 0.35rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.search-result-excerpt mark {
+  padding: 0 0.1em;
   background: var(--mark);
   color: inherit;
   border-radius: 2px;
+}
+
+.search-result-book {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
 }
 
 .search-unavailable {
