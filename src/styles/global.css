@@ -13,6 +13,7 @@
   --accent-hover: #6b2a1e;
   --rule: #ddd4c4;
   --mark: #f1dfa6;
+  --ink-filter: none; /* для зображень, написаних чорнилом (підпис) */
   --icon-moon: block;
   --icon-sun: none;
 
@@ -35,6 +36,7 @@
     --accent-hover: #f2c0ab;
     --rule: #3a352e;
     --mark: #5c4a1e;
+  --ink-filter: invert(0.9);
     --icon-moon: none;
     --icon-sun: block;
   }
@@ -50,6 +52,7 @@
   --accent-hover: #f2c0ab;
   --rule: #3a352e;
   --mark: #5c4a1e;
+  --ink-filter: invert(0.9);
   --icon-moon: none;
   --icon-sun: block;
 }
@@ -424,13 +427,12 @@ hr::after,
   text-wrap: pretty;
 }
 
+/* Кожен абзац, зокрема перший після заголовка, фото чи цитати, — з відступом першого рядка. */
 .prose p {
   margin: 0;
   text-indent: 1.5em;
 }
 
-.prose > p:first-child,
-.prose > :is(h2, h3, hr, blockquote, ul, ol, .verse) + p,
 .prose--center p,
 .prose .signature p {
   text-indent: 0;
@@ -449,9 +451,27 @@ hr::after,
   text-align: center;
 }
 
+/* Підрозділ: дрібніший за розділ, курсивом. */
+.prose h3 {
+  margin: var(--line) 0 calc(var(--line) * 0.5);
+  font-size: 1.0625rem;
+  font-style: italic;
+}
+
+.prose h2 + h3 {
+  margin-top: 0;
+}
+
+/* Цитата прозою: з відступом і тонкою лінією ліворуч. */
 .prose blockquote {
-  margin: var(--line) 0 var(--line) var(--hang);
+  margin: var(--line) 0 var(--line) calc(var(--hang) / 2);
+  padding-left: var(--hang);
+  border-left: 2px solid var(--rule);
   font-size: 0.9375rem;
+}
+
+.prose blockquote p {
+  text-indent: 0;
 }
 
 .prose ul,
@@ -461,6 +481,42 @@ hr::after,
 
 .verse--inset {
   margin-block: var(--line);
+}
+
+/* Сторінка «Про автора»: портрет і підпис. */
+.author-portrait {
+  width: fit-content;
+  margin: 0 auto calc(var(--line) * 1.5);
+  text-align: center;
+}
+
+.author-portrait img {
+  display: block;
+  width: 200px;
+  max-width: 100%;
+  height: auto;
+  border-radius: 2px;
+  box-shadow: 0 1px 6px rgb(0 0 0 / 0.18);
+}
+
+.author-portrait figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.prose .author-signature {
+  margin: var(--line) 0 0;
+  text-indent: 0;
+  text-align: right;
+}
+
+.author-signature img {
+  width: 220px;
+  max-width: 60%;
+  height: auto;
+  filter: var(--ink-filter);
 }
 
 /* Навігація попередній / наступний. */
@@ -817,6 +873,7 @@ hr::after,
     --muted: #333;
     --accent: #000;
     --rule: #999;
+    --ink-filter: none;
     --fs: 11.5pt;
     --lh: 1.5;
   }

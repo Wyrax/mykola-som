@@ -1,12 +1,14 @@
 ---
-/** Проста текстова сторінка з Markdown (наприклад, «Про автора»). */
+/** Проста текстова сторінка з Markdown (наприклад, «Про автора»). Блоки ```verse стають віршами. */
 import Base from './Base.astro';
+import { transformVerseBlocks } from '../lib/verse';
 
 interface Props {
   frontmatter: { title: string; description?: string; current?: 'about' | 'search' };
 }
 
 const { frontmatter } = Astro.props;
+const html = transformVerseBlocks(await Astro.slots.render('default'));
 ---
 
 <Base title={frontmatter.title} description={frontmatter.description} current={frontmatter.current}>
@@ -15,7 +17,7 @@ const { frontmatter } = Astro.props;
       <h1 class="text-title">{frontmatter.title}</h1>
     </header>
     <div class="prose">
-      <slot />
+      <Fragment set:html={html} />
     </div>
   </article>
 </Base>
