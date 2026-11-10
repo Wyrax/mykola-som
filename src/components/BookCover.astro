@@ -1,0 +1,53 @@
+---
+/**
+ * Обкладинка книги (cover у book.yaml). Сайт сам робить зменшені копії (AVIF, WebP, JPEG)
+ * під потрібну ширину. Книга без обкладинки показується «типографічною» обкладинкою:
+ * автор, назва, рік — щоб на полиці всі книги стояли однаково.
+ */
+import { Picture } from 'astro:assets';
+import type { Book } from '../lib/library';
+import { SITE } from '../site';
+
+interface Props {
+  book: Book;
+  /** Ширина обкладинки на сторінці — атрибут sizes, наприклад «(max-width: 40rem) 40vw, 11rem». */
+  sizes: string;
+  /** Опис для читачів з екрана; порожній, якщо назва книги вже стоїть поруч. */
+  alt?: string;
+  class?: string;
+  /** Книга без обкладинки: true — типографічна заміна, false — нічого. */
+  fallback?: boolean;
+  loading?: 'lazy' | 'eager';
+}
+
+const { book, sizes, alt = '', class: className, fallback = true, loading = 'lazy' } = Astro.props;
+const { cover, title, year } = book.data;
+const widths = cover ? [160, 240, 320, 480, 640, 800].filter((w) => w <= cover.width) : [];
+---
+
+{
+  cover ? (
+    <Picture
+      src={cover}
+      formats={['avif', 'webp']}
+      widths={widths}
+      sizes={sizes}
+      alt={alt}
+      loading={loading}
+      class:list={['cover', className]}
+    />
+  ) : (
+    fallback && (
+      <div
+        class:list={['cover', 'cover--blank', className]}
+        role={alt ? 'img' : undefined}
+        aria-label={alt || undefined}
+        aria-hidden={alt ? undefined : 'true'}
+      >
+        <span class="cover-author">{SITE.author}</span>
+        <span class="cover-title">{title}</span>
+        <span class="cover-year">{year ?? ''}</span>
+      </div>
+    )
+  )
+}

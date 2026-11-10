@@ -1,10 +1,11 @@
 ---
+/**
+ * Головна: ім’я автора і книги на часовій лінії за роком видання (затверджений варіант 7 «Ретро III»).
+ * Попередні варіанти головної лежать у /varianty/… — приховані: без посилань, noindex, поза картою сайту.
+ */
 import Base from '../layouts/Base.astro';
-import BookCard from '../components/BookCard.astro';
-import { getLibrary, mainTextCount } from '../lib/library';
+import BookTimeline from '../components/BookTimeline.astro';
 import { SITE } from '../site';
-
-const library = await getLibrary();
 ---
 
 <Base>
@@ -12,16 +13,5 @@ const library = await getLibrary();
     <h1 class="hero-title">{SITE.author}</h1>
     <p class="hero-tagline">{SITE.tagline}</p>
   </section>
-  <section class="books" aria-labelledby="books-title">
-    <h2 id="books-title" class="section-title">Книги</h2>
-    <ul class="book-list">
-      {
-        library.map(({ book, texts }) => (
-          <li>
-            <BookCard book={book} count={mainTextCount(book, texts)} />
-          </li>
-        ))
-      }
-    </ul>
-  </section>
+  <BookTimeline />
 </Base>

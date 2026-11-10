@@ -1,0 +1,73 @@
+---
+/** Перемикач між прихованими варіантами головної сторінки (/varianty/…): на них немає посилань із сайту. */
+import { url } from '../lib/urls';
+
+export type Variant = 'tekst' | 'polytsia' | 'kartky' | 'khronolohiia' | 'retro-1' | 'retro-2' | 'retro-3';
+
+interface Props {
+  current: Variant;
+  /** Які шрифти використано (для ретро-варіантів) — рядок під перемикачем. */
+  fonts?: string;
+}
+
+const { current, fonts } = Astro.props;
+const variants: [Variant, string][] = [
+  ['tekst', 'Текст (колишня головна)'],
+  ['polytsia', 'Полиця'],
+  ['kartky', 'Картки'],
+  ['khronolohiia', 'Хронологія'],
+  ['retro-1', 'Ретро I'],
+  ['retro-2', 'Ретро II'],
+  ['retro-3', 'Ретро III (головна)'],
+];
+---
+
+<nav class="variant-nav" aria-label="Варіанти головної сторінки">
+  <span class="variant-nav-label">Варіант головної:</span>
+  {
+    variants.map(([id, label], i) => (
+      <a href={url(`varianty/${id}/`)} aria-current={id === current ? 'page' : undefined}>
+        {i + 1}. {label}
+      </a>
+    ))
+  }
+  {fonts && <span class="variant-nav-fonts">Шрифти: {fonts}</span>}
+</nav>
+
+<style>
+  .variant-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.25rem 1rem;
+    max-width: 44rem;
+    margin: 0 auto var(--line);
+    padding: 0.5rem 1rem;
+    border: 1px dashed var(--rule);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  .variant-nav-label {
+    font-weight: 500;
+  }
+
+  .variant-nav-fonts {
+    flex-basis: 100%;
+    text-align: center;
+    font-size: 0.8125rem;
+  }
+
+  .variant-nav a {
+    text-decoration: none;
+  }
+
+  .variant-nav a[aria-current='page'] {
+    color: var(--text);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.3em;
+  }
+</style>

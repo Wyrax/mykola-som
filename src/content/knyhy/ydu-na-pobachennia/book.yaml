@@ -4,3 +4,4 @@ kind: "poetry"
 order: 3
 year: 1957
 description: "Перша книжка поезій Миколи Сома."
+cover: ./cover.jpg

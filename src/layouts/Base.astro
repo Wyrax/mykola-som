@@ -13,9 +13,11 @@ interface Props {
   current?: 'about' | 'search';
   /** Не індексувати сторінку пошуковиками (сторінка 404). */
   noindex?: boolean;
+  /** Повна адреса зображення для прев’ю в соцмережах (обкладинка книги). */
+  image?: string;
 }
 
-const { title, description = SITE.description, current, noindex = false } = Astro.props;
+const { title, description = SITE.description, current, noindex = false, image } = Astro.props;
 const fullTitle = title ? `${title} — ${SITE.title}` : `${SITE.title}. ${SITE.tagline}`;
 
 // Канонічна адреса: повний URL сторінки, завжди з кінцевою «/», як у карті сайту.
@@ -37,6 +39,7 @@ const canonical = Astro.site && !noindex ? new URL(canonicalPath, Astro.site).hr
     <meta property="og:description" content={description} />
     <meta property="og:locale" content="uk_UA" />
     {canonical && <meta property="og:url" content={canonical} />}
+    {image && <meta property="og:image" content={image} />}
     <link rel="sitemap" href={url('sitemap-index.xml')} />
     <link rel="icon" type="image/svg+xml" href={url('favicon.svg')} />
     <meta name="generator" content={Astro.generator} />

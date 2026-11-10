@@ -10,6 +10,7 @@ import { getLibrary, textKind, textSlug, type Text } from '../../../lib/library'
 import { pagefindValue } from '../../../lib/pagefind';
 import { bookUrl, textUrl } from '../../../lib/urls';
 import { SITE } from '../../../site';
+import { coverShareImage } from '../../../lib/cover';
 
 export const getStaticPaths = (async () => {
   const library = await getLibrary();
@@ -30,9 +31,10 @@ const link = (t: Text | undefined) => t && { href: textUrl(book.id, textSlug(t))
 // Назва книги в пошуку — окремим фільтром і рядком під результатом, а не частиною назви твору
 // (інакше запит «кодолу» знаходив би кожен твір книги «Передай кодолу!»).
 const searchTitle = data.title;
+const shareImage = await coverShareImage(book, Astro.site);
 ---
 
-<Base title={data.title} description={`${data.title}. ${SITE.author}, «${book.data.title}».`}>
+<Base title={data.title} description={`${data.title}. ${SITE.author}, «${book.data.title}».`} image={shareImage}>
   <article
     class="text"
     data-kind={kind}

@@ -1,0 +1,221 @@
+---
+/**
+ * Варіант 4 «Хронологія»: книги на часовій лінії за роком видання,
+ * великий рік ліворуч, обкладинка й опис праворуч. Книги без року — наприкінці.
+ */
+import Base from '../../layouts/Base.astro';
+import BookCover from '../../components/BookCover.astro';
+import VariantNav from '../../components/VariantNav.astro';
+import { bookMeta, getLibrary } from '../../lib/library';
+import { bookUrl } from '../../lib/urls';
+import { SITE } from '../../site';
+
+const library = await getLibrary();
+const years = library.map(({ book }) => parseInt(String(book.data.year ?? ''), 10)).filter((y) => !Number.isNaN(y));
+const span = years.length ? `${Math.min(...years)}–${Math.max(...years)}` : '';
+---
+
+<Base title="Варіант головної: хронологія" noindex>
+  <VariantNav current="khronolohiia" />
+  <section class="hero">
+    <h1 class="hero-title">{SITE.author}</h1>
+    <p class="hero-tagline">{SITE.tagline}</p>
+  </section>
+  <section class="chrono-section" aria-labelledby="books-title">
+    <h2 id="books-title" class="section-title">Книги {span && <span class="chrono-span">· {span}</span>}</h2>
+    <ol class="chrono">
+      {
+        library.map(({ book, texts }) => (
+          <li class="chrono-item">
+            <p class:list={['chrono-year', { 'chrono-year--none': !book.data.year }]}>
+              {book.data.year ?? 'без року'}
+            </p>
+            <div class="chrono-card">
+              <a class="chrono-cover" href={bookUrl(book.id)} tabindex="-1" aria-hidden="true">
+                <BookCover book={book} sizes="(max-width: 40rem) 5.5rem, 7.5rem" />
+              </a>
+              <div class="chrono-body">
+                <p class="eyebrow">{bookMeta(book, texts, { year: false })}</p>
+                <h3 class="chrono-title">
+                  <a href={bookUrl(book.id)}>{book.data.title}</a>
+                </h3>
+                {book.data.subtitle && <p class="chrono-subtitle">{book.data.subtitle}</p>}
+                {book.data.description && <p class="chrono-description">{book.data.description}</p>}
+              </div>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+</Base>
+
+<style>
+  .chrono-section {
+    --year-w: 6.5rem;
+    --rail: calc(var(--year-w) + 1.5rem);
+    max-width: 46rem;
+    margin-inline: auto;
+  }
+
+  .chrono-span {
+    letter-spacing: 0.04em;
+  }
+
+  .chrono {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* часова лінія */
+  .chrono::before {
+    content: '';
+    position: absolute;
+    left: var(--rail);
+    top: 0.75rem;
+    bottom: 0.75rem;
+    width: 1px;
+    background: var(--rule);
+  }
+
+  .chrono-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--year-w) 1fr;
+    column-gap: 3rem;
+    padding-bottom: calc(var(--line) * 2);
+  }
+
+  .chrono-item:last-child {
+    padding-bottom: 0;
+  }
+
+  /* мітка року на лінії */
+  .chrono-item::before {
+    content: '';
+    position: absolute;
+    left: calc(var(--rail) - 4px);
+    top: 0.85rem;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--accent);
+  }
+
+  .chrono-year {
+    margin: 0;
+    font-size: 2.25rem;
+    font-weight: 300;
+    line-height: 1;
+    text-align: right;
+    color: var(--accent);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  .chrono-year--none {
+    padding-top: 0.6rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .chrono-card {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  .chrono-cover {
+    display: block;
+    transition: transform 0.25s ease;
+  }
+
+  .chrono-cover :global(.cover) {
+    width: 100%;
+  }
+
+  .chrono-item:hover .chrono-cover {
+    transform: translateY(-3px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chrono-cover {
+      transition: none;
+    }
+  }
+
+  .chrono-body .eyebrow {
+    margin: 0 0 0.35rem;
+  }
+
+  .chrono-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .chrono-title a {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .chrono-item:hover .chrono-title a {
+    color: var(--accent);
+  }
+
+  .chrono-subtitle,
+  .chrono-description {
+    margin: 0.4rem 0 0;
+    color: var(--muted);
+  }
+
+  .chrono-subtitle {
+    font-style: italic;
+  }
+
+  .chrono-description {
+    font-size: 0.9375rem;
+  }
+
+  /* Вузький екран: рік над карткою, лінія вздовж лівого краю. */
+  @media (max-width: 40rem) {
+    .chrono-section {
+      --rail: 0.25rem;
+    }
+
+    .chrono-item {
+      grid-template-columns: 1fr;
+      padding-left: 1.5rem;
+    }
+
+    .chrono-item::before {
+      top: 0.55rem;
+    }
+
+    .chrono-year {
+      text-align: left;
+      font-size: 1.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .chrono-year--none {
+      padding-top: 0.25rem;
+    }
+
+    .chrono-card {
+      grid-template-columns: 5.5rem 1fr;
+      gap: 1rem;
+    }
+
+    .chrono-title {
+      font-size: 1.25rem;
+    }
+  }
+</style>

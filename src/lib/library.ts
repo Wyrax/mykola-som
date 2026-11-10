@@ -1,4 +1,6 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
+import { plural, TEXT_FORMS } from './plural';
+import { BOOK_KIND_LABEL } from '../site';
 
 export type Book = CollectionEntry<'books'>;
 export type Text = CollectionEntry<'texts'>;
@@ -60,6 +62,14 @@ export function getLibrary(): Promise<LibraryBook[]> {
       });
   })();
   return cache;
+}
+
+/** Рядок над назвою книги: «Поезія · 1978 · 50 віршів». */
+export function bookMeta(book: Book, texts: Text[], { year = true } = {}): string {
+  const { kind } = book.data;
+  return [BOOK_KIND_LABEL[kind], year && book.data.year, plural(mainTextCount(book, texts), TEXT_FORMS[kind])]
+    .filter(Boolean)
+    .join(' · ');
 }
 
 /** Кількість «основних» текстів книги: віршів у поезії, текстів у прозі (без передмов тощо). */

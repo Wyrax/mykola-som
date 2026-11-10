@@ -1,9 +1,12 @@
 ---
 import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
+import '@fontsource-variable/oswald';
 import Base from '../../../layouts/Base.astro';
+import BookCover from '../../../components/BookCover.astro';
 import { alphabeticalIndex, getLibrary, groupBySection, mainTextCount, textSlug } from '../../../lib/library';
 import { plural, TEXT_FORMS } from '../../../lib/plural';
 import { textUrl } from '../../../lib/urls';
+import { coverShareImage } from '../../../lib/cover';
 import { BOOK_KIND_LABEL, SITE } from '../../../site';
 
 export const getStaticPaths = (async () => {
@@ -22,11 +25,20 @@ const sections = groupBySection(texts);
 const meta = [BOOK_KIND_LABEL[kind], year, plural(mainTextCount(book, texts), TEXT_FORMS[kind])]
   .filter(Boolean)
   .join(' · ');
+const shareImage = await coverShareImage(book, Astro.site);
 ---
 
-<Base title={title} description={description ?? `${SITE.author}. ${title}. ${meta}.`}>
+<Base title={title} description={description ?? `${SITE.author}. ${title}. ${meta}.`} image={shareImage}>
   <div class="book">
     <header class="book-header">
+      <BookCover
+        book={book}
+        fallback={false}
+        alt={`Обкладинка книги «${title}»`}
+        sizes="(max-width: 40rem) 9rem, 11rem"
+        loading="eager"
+        class="book-cover"
+      />
       <p class="eyebrow">{meta}</p>
       <h1 class="book-title">{title}</h1>
       {subtitle && <p class="book-subtitle">{subtitle}</p>}

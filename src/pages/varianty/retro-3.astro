@@ -1,0 +1,19 @@
+---
+/**
+ * Варіант 7 «Ретро III» — затверджений для головної; тут лишається прихованим, щоб порівнювати
+ * з іншими варіантами. Сама часова лінія — у компоненті BookTimeline (той самий, що на головній).
+ */
+import Base from '../../layouts/Base.astro';
+import BookTimeline from '../../components/BookTimeline.astro';
+import VariantNav from '../../components/VariantNav.astro';
+import { SITE } from '../../site';
+---
+
+<Base title="Варіант головної: ретро III" noindex>
+  <VariantNav current="retro-3" fonts="рік — Bad Script · назва — Oswald · підзаголовок — Literata (жирний курсив)" />
+  <section class="hero">
+    <h1 class="hero-title">{SITE.author}</h1>
+    <p class="hero-tagline">{SITE.tagline}</p>
+  </section>
+  <BookTimeline />
+</Base>

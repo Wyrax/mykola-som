@@ -1,0 +1,259 @@
+---
+/**
+ * Варіант 6 «Ретро II»: хронологія з неофіційними шрифтами.
+ * Рік — рукописний тонким пером (Bad Script), назва — пензлем (Comforter Brush, як «Йду»
+ * на обкладинці 1957 року), підзаголовок — тонкі геометричні великі літери (Poiret One).
+ * Лінія — ширша хвиля з крапок; обкладинки лежать трохи навскіс, як книжки на столі.
+ */
+import '@fontsource/bad-script';
+import '@fontsource/comforter-brush';
+import '@fontsource/poiret-one';
+import Base from '../../layouts/Base.astro';
+import BookCover from '../../components/BookCover.astro';
+import VariantNav from '../../components/VariantNav.astro';
+import { bookMeta, getLibrary } from '../../lib/library';
+import { bookUrl } from '../../lib/urls';
+import { SITE } from '../../site';
+
+const library = await getLibrary();
+const years = library.map(({ book }) => parseInt(String(book.data.year ?? ''), 10)).filter((y) => !Number.isNaN(y));
+const span = years.length ? `${Math.min(...years)}–${Math.max(...years)}` : '';
+---
+
+<Base title="Варіант головної: ретро II" noindex>
+  <VariantNav current="retro-2" fonts="рік — Bad Script · назва — Comforter Brush · підзаголовок — Poiret One" />
+  <section class="hero">
+    <h1 class="hero-title">{SITE.author}</h1>
+    <p class="hero-tagline">{SITE.tagline}</p>
+  </section>
+  <section class="retro" aria-labelledby="books-title">
+    <h2 id="books-title" class="section-title">Книги {span && <span>· {span}</span>}</h2>
+    <ol class="retro-list">
+      {
+        library.map(({ book, texts }) => (
+          <li class="retro-item">
+            <p class:list={['retro-year', { 'retro-year--none': !book.data.year }]}>
+              {book.data.year ?? 'без року'}
+            </p>
+            <div class="retro-card">
+              <a class="retro-cover" href={bookUrl(book.id)} tabindex="-1" aria-hidden="true">
+                <BookCover book={book} sizes="(max-width: 40rem) 5.5rem, 7.5rem" />
+              </a>
+              <div class="retro-body">
+                <p class="retro-meta">{bookMeta(book, texts, { year: false })}</p>
+                <h3 class="retro-title">
+                  <a href={bookUrl(book.id)}>{book.data.title}</a>
+                </h3>
+                {book.data.subtitle && <p class="retro-subtitle">{book.data.subtitle}</p>}
+                {book.data.description && <p class="retro-description">{book.data.description}</p>}
+              </div>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+</Base>
+
+<style>
+  .retro {
+    --year-w: 7rem;
+    --rail: calc(var(--year-w) + 1.75rem);
+    max-width: 47rem;
+    margin-inline: auto;
+  }
+
+  .retro-list {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Ширша хвиля з крапок: SVG-хвиля як маска, колір — з теми. */
+  .retro-list::before {
+    content: '';
+    position: absolute;
+    left: calc(var(--rail) - 10px);
+    top: 1.4rem;
+    bottom: 1rem;
+    width: 20px;
+    background: var(--accent);
+    opacity: 0.6;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 64'%3E%3Cpath d='M10 0C19 8 19 24 10 32S1 56 10 64' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-dasharray='0 4' pathLength='64'/%3E%3C/svg%3E")
+      center top / 20px 64px repeat-y;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 64'%3E%3Cpath d='M10 0C19 8 19 24 10 32S1 56 10 64' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-dasharray='0 4' pathLength='64'/%3E%3C/svg%3E")
+      center top / 20px 64px repeat-y;
+  }
+
+  .retro-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--year-w) 1fr;
+    column-gap: 3.75rem;
+    padding-bottom: calc(var(--line) * 2.5);
+  }
+
+  .retro-item:last-child {
+    padding-bottom: 0;
+  }
+
+  /* мітка на лінії */
+  .retro-item::before {
+    content: '';
+    position: absolute;
+    left: calc(var(--rail) - 7px);
+    top: 1.05rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    background: var(--bg);
+    box-shadow: 0 0 0 4px var(--bg);
+  }
+
+  .retro-year {
+    margin: 0;
+    font-family: 'Bad Script', cursive;
+    font-size: 2.4rem;
+    line-height: 1.1;
+    text-align: right;
+    color: var(--accent);
+    transform: rotate(-4deg);
+    transform-origin: right center;
+  }
+
+  .retro-year--none {
+    font-size: 1.5rem;
+    line-height: 1.4;
+  }
+
+  .retro-card {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: 1.75rem;
+    align-items: start;
+  }
+
+  /* Обкладинки навскіс, як книжки, покладені на стіл. */
+  .retro-cover {
+    --tilt: 3deg;
+    display: block;
+    margin-top: 0.4rem;
+    transform: rotate(var(--tilt));
+    transition: transform 0.3s ease;
+  }
+
+  .retro-item:nth-child(5n + 2) .retro-cover {
+    --tilt: -4deg;
+  }
+
+  .retro-item:nth-child(5n + 3) .retro-cover {
+    --tilt: 2deg;
+  }
+
+  .retro-item:nth-child(5n + 4) .retro-cover {
+    --tilt: -3deg;
+  }
+
+  .retro-item:nth-child(5n + 5) .retro-cover {
+    --tilt: 4deg;
+  }
+
+  .retro-cover :global(.cover) {
+    width: 100%;
+    box-shadow:
+      1px 1px 2px rgb(0 0 0 / 0.2),
+      -5px 10px 18px -6px rgb(0 0 0 / 0.45);
+  }
+
+  .retro-item:hover .retro-cover {
+    transform: rotate(0deg) translateY(-3px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .retro-cover {
+      transition: none;
+    }
+  }
+
+  .retro-meta {
+    margin: 0 0 0.1rem;
+    font-family: 'Poiret One', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 400;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    /* Poiret One дуже тонкий — сірий колір тут майже не читається */
+    color: var(--text);
+  }
+
+  .retro-title {
+    margin: 0;
+    font-family: 'Comforter Brush', cursive;
+    font-size: 2.9rem;
+    font-weight: 400;
+    line-height: 1.05;
+  }
+
+  .retro-title a {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .retro-item:hover .retro-title a {
+    color: var(--accent);
+  }
+
+  .retro-subtitle {
+    margin: 0.3rem 0 0;
+    font-family: 'Poiret One', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .retro-description {
+    margin: 0.6rem 0 0;
+    font-size: 0.9375rem;
+    color: var(--muted);
+  }
+
+  /* Вузький екран: рік над карткою, лінія вздовж лівого краю. */
+  @media (max-width: 40rem) {
+    .retro {
+      --rail: 0.65rem;
+    }
+
+    .retro-item {
+      grid-template-columns: 1fr;
+      padding-left: 2rem;
+    }
+
+    .retro-item::before {
+      top: 0.75rem;
+    }
+
+    .retro-year {
+      text-align: left;
+      font-size: 2rem;
+      margin-bottom: 0.9rem;
+      transform-origin: left center;
+    }
+
+    .retro-card {
+      grid-template-columns: 5.5rem 1fr;
+      gap: 1.25rem;
+    }
+
+    .retro-title {
+      font-size: 2.2rem;
+    }
+
+    .retro-subtitle {
+      font-size: 0.9375rem;
+    }
+  }
+</style>

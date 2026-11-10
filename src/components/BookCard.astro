@@ -1,5 +1,5 @@
 ---
-import { Image } from 'astro:assets';
+/** Текстова картка книги без обкладинки (прихований варіант головної «Текст»). */
 import type { Book } from '../lib/library';
 import { bookUrl } from '../lib/urls';
 import { plural, TEXT_FORMS } from '../lib/plural';
@@ -11,16 +11,13 @@ interface Props {
 }
 
 const { book, count } = Astro.props;
-const { title, subtitle, kind, year, description, cover, draft } = book.data;
+const { title, subtitle, kind, year, description, draft } = book.data;
 const meta = [BOOK_KIND_LABEL[kind], year, plural(count, TEXT_FORMS[kind])].filter(Boolean).join(' · ');
 ---
 
-<article class:list={['book-card', { 'book-card--cover': cover }]}>
-  {cover && <Image class="book-card-cover" src={cover} alt="" width={160} />}
-  <div class="book-card-body">
-    <p class="eyebrow">{meta}{draft && ' · чернетка'}</p>
-    <h2 class="book-card-title"><a href={bookUrl(book.id)}>{title}</a></h2>
-    {subtitle && <p class="book-card-subtitle">{subtitle}</p>}
-    {description && <p class="book-card-description">{description}</p>}
-  </div>
+<article class="book-card">
+  <p class="eyebrow">{meta}{draft && ' · чернетка'}</p>
+  <h2 class="book-card-title"><a href={bookUrl(book.id)}>{title}</a></h2>
+  {subtitle && <p class="book-card-subtitle">{subtitle}</p>}
+  {description && <p class="book-card-description">{description}</p>}
 </article>

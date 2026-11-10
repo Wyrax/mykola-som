@@ -1,0 +1,496 @@
+---
+/**
+ * Книги на головній — часова лінія за роком видання (затверджений варіант 7 «Ретро III»).
+ * Рік — тонким пером (Bad Script), назва — Oswald, підзаголовок — жирний курсив основного шрифту.
+ * Пунктирна лінія нерівно звивається між роками й проходить точно через їхні точки
+ * (її малює невеликий скрипт за справжніми позиціями); біля лінії — чорнильні плями,
+ * під обкладинками — сліди від кружки з кавою (коричневий акцент сайту), які не заходять на текст.
+ * Обкладинки лежать трохи навскіс, як книжки на столі.
+ */
+import '@fontsource/bad-script';
+import '@fontsource-variable/oswald';
+import BookCover from './BookCover.astro';
+import { bookMeta, getLibrary } from '../lib/library';
+import { coffeeStain, inkBlot, random, wavyLineTile } from '../lib/stains';
+import { bookUrl } from '../lib/urls';
+
+const library = await getLibrary();
+const years = library.map(({ book }) => parseInt(String(book.data.year ?? ''), 10)).filter((y) => !Number.isNaN(y));
+const span = years.length ? `${Math.min(...years)}–${Math.max(...years)}` : '';
+
+// Запасна лінія без JavaScript (повторювана хвиля); зі скриптом її замінює лінія через точки років.
+const fallbackLine = wavyLineTile({ seed: 19, width: 34, amplitude: 12, dash: 5, gap: 11 });
+
+/**
+ * Прикраси біля книг — по черзі для 1-ї, 2-ї, … книги, далі повторюються.
+ * Чорнило — біля лінії: y — від верху блоку книги, dx — зсув від лінії в px.
+ * Кава — під обкладинкою, біля її нижнього лівого кута (x, y — частка розміру обкладинки):
+ * там слід видно, але він не заходить ні на рік, ні на текст, хоч би яким довгим був опис.
+ */
+type Ink = { seed: number; size: number; drops: number; box: string; y: string; dx: number; rot: number; opacity: number };
+type Coffee = { seed: number; x: string; y: string; size: string };
+const DECOR: { ink?: Ink[]; coffee?: Coffee }[] = [
+  { ink: [{ seed: 11, size: 19, drops: 8, box: '4.6rem', y: 'calc(100% - 1.8rem)', dx: 2, rot: 0, opacity: 0.88 }] },
+  { coffee: { seed: 23, x: '0%', y: '90%', size: '6.5rem' } },
+  { ink: [{ seed: 29, size: 9, drops: 6, box: '3.2rem', y: '58%', dx: -16, rot: 40, opacity: 0.75 }] },
+  {
+    coffee: { seed: 8, x: '2%', y: '100%', size: '6rem' },
+    ink: [{ seed: 41, size: 12, drops: 4, box: '2.8rem', y: '3.9rem', dx: -1, rot: 10, opacity: 0.92 }],
+  },
+];
+
+/** Кожен слід кави — свого розміру (60–100 % від size) і під своїм кутом; стале зерно — той самий вигляд. */
+function coffeeStyle({ seed, x, y, size }: Coffee): string {
+  const rand = random(seed * 7919 + 131);
+  const scale = (0.6 + 0.4 * rand()).toFixed(2);
+  const rot = Math.round(rand() * 360);
+  return `--x: ${x}; --y: ${y}; --size: calc(${size} * ${scale}); --rot: ${rot}deg`;
+}
+---
+
+<section class="retro" aria-labelledby="books-title">
+  <!-- спільні фільтри для плям: нерівні краї -->
+  <svg class="stain-defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="stain-rough" x="-20%" y="-20%" width="140%" height="140%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="4"></feTurbulence>
+        <feDisplacementMap in="SourceGraphic" scale="5"></feDisplacementMap>
+      </filter>
+      <filter id="ink-rough" x="-20%" y="-20%" width="140%" height="140%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.12" numOctaves="2" seed="9"></feTurbulence>
+        <feDisplacementMap in="SourceGraphic" scale="3"></feDisplacementMap>
+      </filter>
+    </defs>
+  </svg>
+
+  <h2 id="books-title" class="section-title">Книги {span && <span>· {span}</span>}</h2>
+  <div
+    class="retro-timeline"
+    style={`--line-mask: ${fallbackLine.uri}; --line-w: ${fallbackLine.width}px; --line-h: ${fallbackLine.height}px`}
+  >
+    <svg class="retro-line" aria-hidden="true" focusable="false"><path></path></svg>
+    <ol class="retro-list">
+      {
+        library.map(({ book, texts }, i) => {
+          const decor = DECOR[i % DECOR.length]!;
+          return (
+            <li class="retro-item">
+              {decor.ink?.map((s) => (
+                <svg
+                  class="stain"
+                  viewBox="-50 -50 100 100"
+                  data-dx={s.dx}
+                  style={`--dx: ${s.dx}px; --y: ${s.y}; --size: ${s.box}; --rot: ${s.rot}deg; opacity: ${s.opacity}`}
+                  aria-hidden="true"
+                  focusable="false"
+                  set:html={`<g filter="url(#ink-rough)">${inkBlot(s.seed, { size: s.size, drops: s.drops })}</g>`}
+                />
+              ))}
+              <p class:list={['retro-year', { 'retro-year--none': !book.data.year }]}>
+                {book.data.year ?? 'без року'}
+              </p>
+              <div class="retro-card">
+                <div class="retro-cover-wrap">
+                  {decor.coffee && (
+                    <svg
+                      class="coffee"
+                      viewBox="-60 -60 120 120"
+                      style={coffeeStyle(decor.coffee)}
+                      aria-hidden="true"
+                      focusable="false"
+                      set:html={coffeeStain(decor.coffee.seed)}
+                    />
+                  )}
+                  <a class="retro-cover" href={bookUrl(book.id)} tabindex="-1" aria-hidden="true">
+                    <BookCover book={book} sizes="(max-width: 40rem) 5.5rem, 7.5rem" />
+                  </a>
+                </div>
+                <div class="retro-body">
+                  <p class="retro-meta">{bookMeta(book, texts, { year: false })}</p>
+                  <h3 class="retro-title">
+                    <a href={bookUrl(book.id)}>{book.data.title}</a>
+                  </h3>
+                  {book.data.subtitle && <p class="retro-subtitle">{book.data.subtitle}</p>}
+                  {book.data.description && <p class="retro-description">{book.data.description}</p>}
+                </div>
+              </div>
+            </li>
+          );
+        })
+      }
+    </ol>
+  </div>
+  <script is:inline>
+    // Пунктирна лінія через точки років: між ними — нерівні вигини (стале зерно для кожного відрізка,
+    // тож при перемальовуванні лінія не «стрибає»). Перемальовується, коли змінюється розмір.
+    (() => {
+      const wrap = document.currentScript.previousElementSibling;
+      const svg = wrap.querySelector('.retro-line');
+      const path = svg.querySelector('path');
+      const list = wrap.querySelector('.retro-list');
+      const random = (seed) => () => {
+        seed = (seed + 0x6d2b79f5) | 0;
+        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+      const f = (n) => n.toFixed(1);
+
+      const draw = () => {
+        const box = wrap.getBoundingClientRect();
+        const dots = [...list.children].map((li) => {
+          const b = li.getBoundingClientRect();
+          const s = getComputedStyle(li, '::before');
+          return [
+            b.left - box.left + parseFloat(s.left) + parseFloat(s.width) / 2,
+            b.top - box.top + parseFloat(s.top) + parseFloat(s.height) / 2,
+          ];
+        });
+        if (dots.length < 2) return;
+        const amp = Math.min(14, dots[0][0] + 10);
+        const pts = [dots[0]];
+        for (let i = 1; i < dots.length; i++) {
+          const [a, b] = [dots[i - 1], dots[i]];
+          const rnd = random(4099 * i + 17);
+          for (let y = a[1] + 16 + rnd() * 34; y < b[1] - 20; y += 22 + rnd() * 58) {
+            const t = (y - a[1]) / (b[1] - a[1]);
+            const x = a[0] + (b[0] - a[0]) * t + (rnd() * 2 - 1) * amp * (0.35 + 0.65 * rnd());
+            pts.push([Math.max(2, x), y]);
+          }
+          pts.push(b);
+        }
+        let d = `M${f(pts[0][0])} ${f(pts[0][1])}`;
+        for (let i = 0; i < pts.length - 1; i++) {
+          const p0 = pts[i - 1] || pts[i];
+          const [p1, p2] = [pts[i], pts[i + 1]];
+          const p3 = pts[i + 2] || p2;
+          d +=
+            `C${f(p1[0] + (p2[0] - p0[0]) / 6)} ${f(p1[1] + (p2[1] - p0[1]) / 6)} ` +
+            `${f(p2[0] - (p3[0] - p1[0]) / 6)} ${f(p2[1] - (p3[1] - p1[1]) / 6)} ${f(p2[0])} ${f(p2[1])}`;
+        }
+        svg.setAttribute('viewBox', `0 0 ${f(box.width)} ${f(box.height)}`);
+        path.setAttribute('d', d);
+        wrap.classList.add('has-line');
+
+        // чорнильні плями — на лінії (зі своїм зсувом dx)
+        const lineX = (y) => {
+          for (let i = 1; i < pts.length; i++) {
+            if (pts[i][1] >= y) {
+              const [a, b] = [pts[i - 1], pts[i]];
+              return a[0] + (b[0] - a[0]) * ((y - a[1]) / (b[1] - a[1] || 1));
+            }
+          }
+          return pts[pts.length - 1][0];
+        };
+        wrap.querySelectorAll('.stain').forEach((el) => {
+          const li = el.parentElement.getBoundingClientRect();
+          const r = el.getBoundingClientRect();
+          const y = r.top + r.height / 2 - box.top;
+          el.style.left = `${f(lineX(y) + Number(el.dataset.dx) - (li.left - box.left))}px`;
+        });
+      };
+
+      let frame = 0;
+      const schedule = () => {
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(draw);
+      };
+      draw();
+      new ResizeObserver(schedule).observe(wrap);
+      if (document.fonts) document.fonts.ready.then(schedule);
+    })();
+  </script>
+</section>
+
+<style>
+  .retro {
+    --year-w: 7rem;
+    --rail: calc(var(--year-w) + 1.6rem);
+    --ink-blot: #1b1815;
+    --coffee: var(--accent);
+    position: relative;
+    max-width: 47rem;
+    margin-inline: auto;
+    overflow-x: clip;
+  }
+
+  /* У темній темі чорнило — кольором тексту, як назви книг. */
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .retro {
+      --ink-blot: var(--text);
+    }
+  }
+
+  :global(:root[data-theme='dark']) .retro {
+    --ink-blot: var(--text);
+  }
+
+  .stain-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+
+  .retro-timeline {
+    position: relative;
+  }
+
+  /* Лінія через точки років (малює скрипт). */
+  .retro-line {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .retro-line path {
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-dasharray: 5 11;
+    opacity: 0.85;
+  }
+
+  .retro-list {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Запасна лінія без JavaScript: повторювана хвиля-маска. */
+  .retro-list::before {
+    content: '';
+    position: absolute;
+    left: calc(var(--rail) - var(--line-w) / 2);
+    top: 1.4rem;
+    bottom: 1rem;
+    width: var(--line-w);
+    background: var(--muted);
+    opacity: 0.8;
+    -webkit-mask: var(--line-mask) center top / var(--line-w) var(--line-h) repeat-y;
+    mask: var(--line-mask) center top / var(--line-w) var(--line-h) repeat-y;
+  }
+
+  .has-line .retro-list::before {
+    display: none;
+  }
+
+  .retro-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--year-w) 1fr;
+    column-gap: 3.4rem;
+    padding-bottom: calc(var(--line) * 2.5);
+  }
+
+  .retro-item:last-child {
+    padding-bottom: 0;
+  }
+
+  /* точка року: лінія проходить точно через неї */
+  .retro-item::before {
+    content: '';
+    position: absolute;
+    z-index: 2;
+    left: calc(var(--rail) - 6px);
+    top: 1.05rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* Чорнильні плями: поверх лінії, під текстом. Скрипт ставить їх точно на лінію. */
+  .stain {
+    position: absolute;
+    z-index: 1;
+    left: calc(var(--rail) + var(--dx));
+    top: var(--y);
+    width: var(--size);
+    height: var(--size);
+    translate: -50% -50%;
+    rotate: var(--rot);
+    overflow: visible;
+    pointer-events: none;
+    color: var(--ink-blot);
+    fill: currentColor;
+  }
+
+  .retro-year,
+  .retro-card {
+    position: relative;
+    z-index: 1;
+  }
+
+  .retro-year {
+    margin: 0;
+    font-family: 'Bad Script', cursive;
+    font-size: 2.4rem;
+    line-height: 1.1;
+    text-align: right;
+    color: var(--accent);
+    transform: rotate(-4deg);
+    transform-origin: right center;
+  }
+
+  .retro-year--none {
+    font-size: 1.5rem;
+    line-height: 1.4;
+  }
+
+  .retro-card {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: 1.75rem;
+    align-items: start;
+  }
+
+  /* Обгортка обкладинки: тут лежить слід від кави — під книжкою, нікуди не рухається. */
+  .retro-cover-wrap {
+    position: relative;
+    z-index: 0;
+    margin-top: 0.4rem;
+  }
+
+  .coffee {
+    position: absolute;
+    z-index: -1;
+    left: var(--x);
+    top: var(--y);
+    width: var(--size);
+    height: var(--size);
+    translate: -50% -50%;
+    rotate: var(--rot);
+    overflow: visible;
+    pointer-events: none;
+    color: var(--coffee);
+  }
+
+  /* Обкладинки навскіс, як книжки, покладені на стіл. */
+  .retro-cover {
+    --tilt: -4deg;
+    display: block;
+    transform: rotate(var(--tilt));
+    transition: transform 0.3s ease;
+  }
+
+  .retro-item:nth-child(5n + 2) .retro-cover {
+    --tilt: 3deg;
+  }
+
+  .retro-item:nth-child(5n + 3) .retro-cover {
+    --tilt: -2deg;
+  }
+
+  .retro-item:nth-child(5n + 4) .retro-cover {
+    --tilt: 4.5deg;
+  }
+
+  .retro-item:nth-child(5n + 5) .retro-cover {
+    --tilt: -3deg;
+  }
+
+  .retro-cover :global(.cover) {
+    width: 100%;
+    box-shadow:
+      1px 1px 2px rgb(0 0 0 / 0.2),
+      6px 10px 18px -6px rgb(0 0 0 / 0.45);
+  }
+
+  .retro-item:hover .retro-cover {
+    transform: rotate(0deg) translateY(-3px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .retro-cover {
+      transition: none;
+    }
+  }
+
+  .retro-meta {
+    margin: 0 0 0.4rem;
+    font-family: 'Oswald Variable', 'Oswald', sans-serif;
+    font-size: 0.8125rem;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .retro-title {
+    margin: 0;
+    font-family: 'Oswald Variable', 'Oswald', sans-serif;
+    font-size: 1.85rem;
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .retro-title a {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .retro-item:hover .retro-title a {
+    color: var(--accent);
+  }
+
+  /* як підзаголовок на сторінці книги: основний шрифт сайту (Literata) курсивом, але жирним,
+     щоб не зливався з описом */
+  .retro-subtitle {
+    margin: 0.35rem 0 0;
+    font-style: italic;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+
+  .retro-description {
+    margin: 0.5rem 0 0;
+    font-size: 0.9375rem;
+    color: var(--muted);
+  }
+
+  /* Вузький екран: рік над карткою, лінія вздовж лівого краю. */
+  @media (max-width: 40rem) {
+    .retro {
+      --rail: 0.65rem;
+    }
+
+    .retro-item {
+      grid-template-columns: 1fr;
+      padding-left: 2rem;
+    }
+
+    .retro-item::before {
+      top: 0.75rem;
+    }
+
+    .coffee {
+      width: calc(var(--size) * 0.8);
+      height: calc(var(--size) * 0.8);
+    }
+
+    .retro-year {
+      text-align: left;
+      font-size: 2rem;
+      margin-bottom: 0.9rem;
+      transform-origin: left center;
+    }
+
+    .retro-card {
+      grid-template-columns: 5.5rem 1fr;
+      gap: 1.25rem;
+    }
+
+    .retro-title {
+      font-size: 1.4rem;
+    }
+  }
+</style>

@@ -1,0 +1,30 @@
+---
+/** Варіант 1: колишня головна (лише текст) — для порівняння з іншими варіантами. */
+import Base from '../../layouts/Base.astro';
+import BookCard from '../../components/BookCard.astro';
+import VariantNav from '../../components/VariantNav.astro';
+import { getLibrary, mainTextCount } from '../../lib/library';
+import { SITE } from '../../site';
+
+const library = await getLibrary();
+---
+
+<Base title="Варіант головної: текст" noindex>
+  <VariantNav current="tekst" />
+  <section class="hero">
+    <h1 class="hero-title">{SITE.author}</h1>
+    <p class="hero-tagline">{SITE.tagline}</p>
+  </section>
+  <section class="books" aria-labelledby="books-title">
+    <h2 id="books-title" class="section-title">Книги</h2>
+    <ul class="book-list">
+      {
+        library.map(({ book, texts }) => (
+          <li>
+            <BookCard book={book} count={mainTextCount(book, texts)} />
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Base>

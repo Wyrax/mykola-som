@@ -1,0 +1,133 @@
+---
+/**
+ * Варіант 3 «Картки»: поточний список книг, але з обкладинкою ліворуч —
+ * назва, підзаголовок і опис лишаються, як зараз.
+ */
+import Base from '../../layouts/Base.astro';
+import BookCover from '../../components/BookCover.astro';
+import VariantNav from '../../components/VariantNav.astro';
+import { bookMeta, getLibrary } from '../../lib/library';
+import { bookUrl } from '../../lib/urls';
+import { SITE } from '../../site';
+
+const library = await getLibrary();
+---
+
+<Base title="Варіант головної: картки" noindex>
+  <VariantNav current="kartky" />
+  <section class="hero">
+    <h1 class="hero-title">{SITE.author}</h1>
+    <p class="hero-tagline">{SITE.tagline}</p>
+  </section>
+  <section class="catalog-section" aria-labelledby="books-title">
+    <h2 id="books-title" class="section-title">Книги</h2>
+    <ul class="catalog">
+      {
+        library.map(({ book, texts }) => (
+          <li class="catalog-item">
+            <a class="catalog-cover" href={bookUrl(book.id)} tabindex="-1" aria-hidden="true">
+              <BookCover book={book} sizes="(max-width: 40rem) 6.5rem, 9rem" />
+            </a>
+            <div class="catalog-body">
+              <p class="eyebrow">{bookMeta(book, texts)}</p>
+              <h3 class="catalog-title">
+                <a href={bookUrl(book.id)}>{book.data.title}</a>
+              </h3>
+              {book.data.subtitle && <p class="catalog-subtitle">{book.data.subtitle}</p>}
+              {book.data.description && <p class="catalog-description">{book.data.description}</p>}
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Base>
+
+<style>
+  .catalog-section {
+    max-width: 42rem;
+    margin-inline: auto;
+  }
+
+  .catalog {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .catalog-item {
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    gap: 2rem;
+    align-items: start;
+    padding: calc(var(--line) * 1.25) 0;
+  }
+
+  .catalog-item + .catalog-item {
+    border-top: 1px solid var(--rule);
+  }
+
+  .catalog-cover {
+    display: block;
+    transition: transform 0.25s ease;
+  }
+
+  .catalog-cover :global(.cover) {
+    width: 100%;
+  }
+
+  .catalog-item:hover .catalog-cover {
+    transform: translateY(-3px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .catalog-cover {
+      transition: none;
+    }
+  }
+
+  .catalog-body .eyebrow {
+    margin: 0.25rem 0 0.35rem;
+  }
+
+  .catalog-title {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .catalog-title a {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .catalog-item:hover .catalog-title a {
+    color: var(--accent);
+  }
+
+  .catalog-subtitle,
+  .catalog-description {
+    margin: 0.5rem 0 0;
+    color: var(--muted);
+  }
+
+  .catalog-subtitle {
+    font-style: italic;
+  }
+
+  @media (max-width: 40rem) {
+    .catalog-item {
+      grid-template-columns: 6.5rem 1fr;
+      gap: 1.25rem;
+    }
+
+    .catalog-title {
+      font-size: 1.375rem;
+    }
+
+    .catalog-description {
+      font-size: 0.9375rem;
+    }
+  }
+</style>

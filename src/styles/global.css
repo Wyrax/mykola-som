@@ -16,6 +16,12 @@
   --ink-filter: none; /* для зображень, написаних чорнилом (підпис) */
   --icon-moon: block;
   --icon-sun: none;
+  /* обкладинки книг */
+  --cover-shadow: 0 1px 2px rgb(40 30 20 / 0.12), 0 12px 22px -12px rgb(40 30 20 / 0.5);
+  --cover-blank-bg: #7d3426;
+  --cover-blank-text: #f4ead9;
+  --shelf-top: #dccdb2;
+  --shelf-bottom: #c2ad8b;
 
   --font: 'Literata Variable', 'Literata', Georgia, 'Times New Roman', serif;
   --fs: 1.125rem;
@@ -39,6 +45,11 @@
   --ink-filter: invert(0.9);
     --icon-moon: none;
     --icon-sun: block;
+    --cover-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 12px 24px -12px rgb(0 0 0 / 0.85);
+    --cover-blank-bg: #5b2c22;
+    --cover-blank-text: #ecdcc6;
+    --shelf-top: #3d362d;
+    --shelf-bottom: #2b261f;
   }
 }
 
@@ -55,6 +66,11 @@
   --ink-filter: invert(0.9);
   --icon-moon: none;
   --icon-sun: block;
+  --cover-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 12px 24px -12px rgb(0 0 0 / 0.85);
+  --cover-blank-bg: #5b2c22;
+  --cover-blank-text: #ecdcc6;
+  --shelf-top: #3d362d;
+  --shelf-bottom: #2b261f;
 }
 
 @media (max-width: 40rem) {
@@ -593,6 +609,68 @@ hr::after,
   }
 }
 
+/* ---------- Обкладинки ---------- */
+
+/* Обкладинка (img з <picture>) або типографічна заміна для книги без обкладинки. */
+picture:has(> img.cover) {
+  display: contents;
+}
+
+.cover {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 1px 3px 3px 1px;
+  box-shadow: var(--cover-shadow);
+}
+
+.cover--blank {
+  container-type: inline-size;
+  aspect-ratio: 2 / 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
+  padding: 14% 10% 11%;
+  background: var(--cover-blank-bg);
+  color: var(--cover-blank-text);
+  text-align: center;
+  position: relative;
+  /* корінець ліворуч трохи темніший, як на палітурці */
+  background-image: linear-gradient(90deg, rgb(0 0 0 / 0.18), transparent 7%);
+}
+
+/* тиснена рамка; відступи однакові з усіх боків при пропорції 2 : 3 */
+.cover--blank::before {
+  content: '';
+  position: absolute;
+  inset: 4% 6%;
+  border: 1px solid color-mix(in srgb, var(--cover-blank-text) 35%, transparent);
+  pointer-events: none;
+}
+
+.cover-author {
+  font-size: 0.6rem;
+  font-size: 6.5cqi;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.cover-title {
+  font-size: 1rem;
+  font-size: 12cqi;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.cover-year {
+  font-size: 0.6rem;
+  font-size: 6.5cqi;
+  letter-spacing: 0.08em;
+}
+
 /* ---------- Головна ---------- */
 
 .hero {
@@ -632,20 +710,6 @@ hr::after,
 .book-card {
   padding: var(--line) 0;
   text-align: center;
-}
-
-.book-card--cover {
-  display: grid;
-  grid-template-columns: 7rem 1fr;
-  gap: 1.5rem;
-  align-items: start;
-  text-align: left;
-}
-
-.book-card-cover {
-  width: 100%;
-  height: auto;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.15);
 }
 
 .book-card .eyebrow {
@@ -693,16 +757,32 @@ hr::after,
   margin: 0 0 0.5rem;
 }
 
+.book-cover {
+  width: 11rem;
+  margin: 0 auto calc(var(--line) * 1.25);
+}
+
+@media (max-width: 40rem) {
+  .book-cover {
+    width: 9rem;
+  }
+}
+
+/* Назва книги — вузький гротеск Oswald (як «НА ПОБАЧЕННЯ» на обкладинці 1957 року);
+   шрифт підключає сторінка книги. */
 .book-title {
   margin: 0;
-  font-size: clamp(2rem, 6vw, 2.5rem);
-  font-weight: 600;
-  line-height: 1.2;
+  font-family: 'Oswald Variable', 'Oswald', var(--font);
+  font-size: clamp(2.25rem, 6.5vw, 2.75rem);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
 }
 
 .book-subtitle {
   margin: 0.5rem 0 0;
   font-style: italic;
+  font-weight: 600;
   color: var(--muted);
 }
 
