@@ -91,7 +91,8 @@ const pages = files.map((file) => {
   return {
     scan: file.slice(0, 3),
     page: meta?.[2] ?? '?',
-    blank: /порожня/.test(meta?.[3] ?? ''),
+    // порожня сторінка або службова (обкладинка, титул, вихідні дані) — у текст книги не йде
+    blank: /порожня|службова/.test(meta?.[3] ?? ''),
     lines: rest,
   };
 });
@@ -193,7 +194,19 @@ function matchTitle(caps) {
 
 const isAllCaps = (s) => !/\p{Ll}/u.test(s.replace(/́/g, ''));
 
-function startWork(heading, scan) {
+const UNTITLED = /^\*\s*\*\s*\*$/;
+
+function startWork(heading, scan, firstLine) {
+  // вірш без назви («## * * *»): у змісті — його перший рядок, на сторінці — зірочки
+  if (UNTITLED.test(heading.trim())) {
+    const line = (firstLine ?? '').trim().replace(/[\s,.;:!?…–—-]+$/, '');
+    const entry = matchTitle(line);
+    const title = entry?.title ?? line;
+    if (!entry) report.unmatched.push(`скан ${scan}: * * * «${line}» → ${title}`);
+    work = { title, untitled: true, section: currentSection, scan, fields: {}, lines: [], entry };
+    works.push(work);
+    return;
+  }
   // назва над твором без кінцевого тире чи коми, які ведуть у текст («Всеволоду Нестайку –»)
   const printed = heading.trim().replace(/\s*[–—,:]\s*$/, '');
   const entry = matchTitle(printed);
@@ -203,6 +216,18 @@ function startWork(heading, scan) {
   if (!entry && !override) report.unmatched.push(`скан ${scan}: ${heading.trim()} → ${title}`);
   work = { title, section: currentSection, scan, fields: {}, lines: [], entry };
   works.push(work);
+}
+
+/** Перший рядок тексту твору після назви (без присвят, епіграфів, підзаголовків). */
+function firstTextLine(from) {
+  let inEpigraph = false;
+  for (let j = from; j < stream.length; j++) {
+    const t = stream[j].text.trim();
+    if (/^\[епіграф\]/.test(t)) inEpigraph = true;
+    else if (/^\[\/епіграф\]/.test(t)) inEpigraph = false;
+    else if (t && !inEpigraph && !/^\[|^#/.test(t)) return t;
+  }
+  return undefined;
 }
 
 for (let i = 0; i < stream.length; i++) {
@@ -219,7 +244,7 @@ for (let i = 0; i < stream.length; i++) {
     continue;
   }
   if (h2) {
-    startWork(h2[1], scan);
+    startWork(h2[1], scan, UNTITLED.test(h2[1].trim()) ? firstTextLine(i + 1) : undefined);
     continue;
   }
   if (!work) {
@@ -344,6 +369,7 @@ const results = works.map((w, index) => {
     title: typography(w.title),
     kind,
     order: index + 1,
+    untitled: w.untitled || undefined,
     section: w.section ? typography(w.section) : undefined,
     subtitle: fields.subtitle?.replace(/^\((.*)\)$/s, '$1'),
     dedication: fields.dedication,

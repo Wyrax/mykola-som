@@ -25,6 +25,16 @@ export function textKind(text: Text, book: Book): TextKind {
 const byOrder = (a: Text, b: Text) =>
   a.data.order - b.data.order || a.data.title.localeCompare(b.data.title, 'uk');
 
+/** Книги — за роком видання; без року — наприкінці. Однаковий рік (чи його немає) — за `order`. */
+const yearOf = (book: Book): number => {
+  const year = parseInt(String(book.data.year ?? ''), 10); // «1957» або «1957–1960» → 1957
+  return Number.isNaN(year) ? Infinity : year;
+};
+const byYear = (a: Book, b: Book) =>
+  (yearOf(a) === yearOf(b) ? 0 : yearOf(a) - yearOf(b)) ||
+  a.data.order - b.data.order ||
+  a.data.title.localeCompare(b.data.title, 'uk');
+
 let cache: Promise<LibraryBook[]> | undefined;
 
 /** Усі книги (без чернеток у продакшн-збірці) з упорядкованими текстами. */
@@ -42,7 +52,7 @@ export function getLibrary(): Promise<LibraryBook[]> {
 
     return allBooks
       .filter((book) => SHOW_DRAFTS || !book.data.draft)
-      .sort((a, b) => a.data.order - b.data.order || a.data.title.localeCompare(b.data.title, 'uk'))
+      .sort(byYear)
       .map((book) => {
         const texts = allTexts.filter((t) => textBookId(t) === book.id).sort(byOrder);
         texts.forEach((t) => textKind(t, book)); // ранній контроль kind для змішаних книг
