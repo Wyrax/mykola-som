@@ -309,6 +309,7 @@ hr::after,
   margin: calc(var(--line) * 0.25) 0 0;
   font-style: italic;
   color: var(--muted);
+  white-space: pre-line;
 }
 
 .dedication {
@@ -363,6 +364,10 @@ hr::after,
   color: var(--text);
 }
 
+.signature-title {
+  font-size: 0.875rem;
+}
+
 .text-note {
   margin: calc(var(--line) * 1.5) 0 0;
   padding-top: calc(var(--line) * 0.5);
@@ -371,6 +376,17 @@ hr::after,
   line-height: 1.5;
   color: var(--muted);
   white-space: pre-line;
+}
+
+.toc-section {
+  margin: calc(var(--line) * 1.25) 0 calc(var(--line) * 0.25);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  font-style: italic;
+}
+
+.section-title + .toc-section {
+  margin-top: 0;
 }
 
 .toc-author {

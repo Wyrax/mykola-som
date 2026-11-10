@@ -1,7 +1,7 @@
 ---
 import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
 import Base from '../../../layouts/Base.astro';
-import { alphabeticalIndex, getLibrary, mainTextCount, textKind, textSlug } from '../../../lib/library';
+import { alphabeticalIndex, getLibrary, groupBySection, mainTextCount, textSlug } from '../../../lib/library';
 import { plural, TEXT_FORMS } from '../../../lib/plural';
 import { textUrl } from '../../../lib/urls';
 import { BOOK_KIND_LABEL, SITE } from '../../../site';
@@ -15,8 +15,10 @@ type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 const { book, texts } = Astro.props;
 const { title, subtitle, kind, year, description, draft } = book.data;
-const poems = texts.filter((text) => textKind(text, book) === 'poem');
-const index = poems.length > 1 ? alphabeticalIndex(poems) : [];
+// Покажчик — лише твори самого автора (без передмов, де вказано іншого автора).
+const ownWorks = texts.filter((text) => !text.data.author);
+const index = ownWorks.length > 1 ? alphabeticalIndex(ownWorks) : [];
+const sections = groupBySection(texts);
 const meta = [BOOK_KIND_LABEL[kind], year, plural(mainTextCount(book, texts), TEXT_FORMS[kind])]
   .filter(Boolean)
   .join(' · ');
@@ -47,16 +49,23 @@ const meta = [BOOK_KIND_LABEL[kind], year, plural(mainTextCount(book, texts), TE
 
     <section aria-labelledby="zmist">
       <h2 id="zmist" class="section-title">Зміст</h2>
-      <ol class="toc">
-        {
-          texts.map((text) => (
-            <li>
-              <a href={textUrl(book.id, textSlug(text))}>{text.data.title}</a>
-              {text.data.author && <span class="toc-author"> — {text.data.author}</span>}
-            </li>
-          ))
-        }
-      </ol>
+      {
+        sections.map((group) => (
+          <>
+            {group.section && <h3 class="toc-section">{group.section}</h3>}
+            <ol class="toc">
+              {group.texts.map((text) => (
+                <li>
+                  <a href={textUrl(book.id, textSlug(text))}>{text.data.title}</a>
+                  {text.data.author && (
+                    <span class="toc-author"> — {text.data.author.split('\n')[0]!.replace(/,\s*$/, '')}</span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </>
+        ))
+      }
     </section>
 
     {

@@ -54,9 +54,21 @@ export function getLibrary(): Promise<LibraryBook[]> {
 
 /** Кількість «основних» текстів книги: віршів у поезії, текстів у прозі (без передмов тощо). */
 export function mainTextCount(book: Book, texts: Text[]): number {
-  if (book.data.kind === 'mixed') return texts.length;
+  // у змішаній книзі — усі твори самого автора (передмова іншого автора не рахується)
+  if (book.data.kind === 'mixed') return texts.filter((text) => !text.data.author).length;
   const main: TextKind = book.data.kind === 'poetry' ? 'poem' : 'prose';
   return texts.filter((text) => textKind(text, book) === main).length;
+}
+
+/** Зміст за розділами: послідовні тексти з однаковим `section` — одна група (без розділу — section undefined). */
+export function groupBySection(texts: Text[]): { section?: string; texts: Text[] }[] {
+  const groups: { section?: string; texts: Text[] }[] = [];
+  for (const text of texts) {
+    const last = groups.at(-1);
+    if (last && last.section === text.data.section) last.texts.push(text);
+    else groups.push({ section: text.data.section, texts: [text] });
+  }
+  return groups;
 }
 
 /** Алфавітний покажчик: групи за першою літерою, порядок української абетки. */

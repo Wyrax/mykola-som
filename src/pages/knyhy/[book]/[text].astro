@@ -13,22 +13,23 @@ import { SITE } from '../../../site';
 
 export const getStaticPaths = (async () => {
   const library = await getLibrary();
-  const manyBooks = library.length > 1;
   return library.flatMap(({ book, texts }) =>
     texts.map((text, i) => ({
       params: { book: book.id, text: textSlug(text) },
-      props: { book, text, prev: texts[i - 1], next: texts[i + 1], manyBooks },
+      props: { book, text, prev: texts[i - 1], next: texts[i + 1] },
     })),
   );
 }) satisfies GetStaticPaths;
 
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
-const { book, text, prev, next, manyBooks } = Astro.props;
+const { book, text, prev, next } = Astro.props;
 const kind = textKind(text, book);
 const data = text.data;
 const link = (t: Text | undefined) => t && { href: textUrl(book.id, textSlug(t)), title: t.data.title };
-const searchTitle = manyBooks ? `${data.title} · ${book.data.title}` : data.title;
+// Назва книги в пошуку — окремим фільтром і рядком під результатом, а не частиною назви твору
+// (інакше запит «кодолу» знаходив би кожен твір книги «Передай кодолу!»).
+const searchTitle = data.title;
 ---
 
 <Base title={data.title} description={`${data.title}. ${SITE.author}, «${book.data.title}».`}>
@@ -46,6 +47,7 @@ const searchTitle = manyBooks ? `${data.title} · ${book.data.title}` : data.tit
       dedication={data.dedication}
       epigraph={data.epigraph}
       epigraphSource={data.epigraphSource}
+      epigraphs={data.epigraphs}
       bookTitle={book.data.title}
       bookHref={bookUrl(book.id)}
     />

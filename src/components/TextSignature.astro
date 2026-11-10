@@ -1,18 +1,23 @@
 ---
 interface Props {
+  /** Автор; кілька рядків (ім’я, звання) — через перенесення рядка. */
   author?: string;
   date?: string | number;
   place?: string;
 }
 
 const { author, date, place } = Astro.props;
+const [name, ...titles] = (author ?? '').split('\n');
 const when = [place, date].filter((part) => part !== undefined && part !== '').join(', ');
 ---
 
 {
   (author || when) && (
     <div class="signature">
-      {author && <p class="signature-author">{author}</p>}
+      {name && <p class="signature-author">{name}</p>}
+      {titles.map((line) => (
+        <p class="signature-title">{line}</p>
+      ))}
       {when && <p>{when}</p>}
     </div>
   )

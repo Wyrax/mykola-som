@@ -1,4 +1,9 @@
 ---
+interface Epigraph {
+  text: string;
+  source?: string;
+}
+
 interface Props {
   title: string;
   untitled?: boolean;
@@ -6,11 +11,15 @@ interface Props {
   dedication?: string;
   epigraph?: string;
   epigraphSource?: string;
+  /** Кілька епіграфів; якщо задано, epigraph/epigraphSource не використовуються. */
+  epigraphs?: Epigraph[];
   bookTitle: string;
   bookHref: string;
 }
 
-const { title, untitled, subtitle, dedication, epigraph, epigraphSource, bookTitle, bookHref } = Astro.props;
+const { title, untitled, subtitle, dedication, epigraph, epigraphSource, epigraphs, bookTitle, bookHref } =
+  Astro.props;
+const allEpigraphs: Epigraph[] = epigraphs ?? (epigraph ? [{ text: epigraph, source: epigraphSource }] : []);
 ---
 
 <header class="text-header">
@@ -28,11 +37,11 @@ const { title, untitled, subtitle, dedication, epigraph, epigraphSource, bookTit
   {subtitle && <p class="text-subtitle">{subtitle}</p>}
   {dedication && <p class="dedication">{dedication}</p>}
   {
-    epigraph && (
+    allEpigraphs.map((item) => (
       <blockquote class="epigraph">
-        <p>{epigraph}</p>
-        {epigraphSource && <footer>{epigraphSource}</footer>}
+        <p>{item.text}</p>
+        {item.source && <footer>{item.source}</footer>}
       </blockquote>
-    )
+    ))
   }
 </header>

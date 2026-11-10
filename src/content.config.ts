@@ -38,6 +38,8 @@ const texts = defineCollection({
     title: z.string(),
     kind: z.enum(['poem', 'prose']).optional(),
     order: z.number(),
+    /** Розділ книги («Йду на побачення», «Епітафії»…); зміст групується за розділами. */
+    section: z.string().optional(),
     untitled: z.boolean().default(false),
     subtitle: z.string().optional(),
     /** Автор, якщо текст написав не Микола Сом (наприклад, передмова). */
@@ -45,6 +47,8 @@ const texts = defineCollection({
     dedication: z.string().optional(),
     epigraph: z.string().optional(),
     epigraphSource: z.string().optional(),
+    /** Кілька епіграфів (замість epigraph/epigraphSource). */
+    epigraphs: z.array(z.object({ text: z.string(), source: z.string().optional() })).optional(),
     date: z.union([z.string(), z.number()]).optional(),
     place: z.string().optional(),
     /** Примітка під текстом (виноска «*…»). */
