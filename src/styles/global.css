@@ -438,6 +438,16 @@ hr::after,
   margin-top: 0;
 }
 
+/* Прозовий абзац усередині вірша (довідка, цитата): завширшки з вірш — contain не дає йому
+   розсунути блок вірша на всю колонку. */
+.verse-prose {
+  contain: inline-size;
+  margin: var(--line) 0;
+  font-size: 0.9375rem;
+  text-indent: 1.5em;
+  hyphens: auto;
+}
+
 .verse-part-subtitle {
   margin: calc(var(--line) * -0.5) 0 calc(var(--line) * 0.5);
   font-size: 0.9375rem;

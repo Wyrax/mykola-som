@@ -152,7 +152,13 @@ for (const page of bodyPages) {
   if (/^\[продовження абзацу\]\s*$/.test(lines[0] ?? '')) {
     lines.shift();
     while (lines.length && !lines[0].trim()) lines.shift();
-    while (stream.length && !stream.at(-1).text.trim()) stream.pop();
+    // Виноска чи дата внизу попередньої сторінки не розриває абзац і строфу: відкладаємо її
+    // й повертаємо після продовження (поля твору однаково йдуть у frontmatter).
+    const held = [];
+    while (stream.length && (!stream.at(-1).text.trim() || /^\[(примітка|дата)\]/.test(stream.at(-1).text.trim()))) {
+      const s = stream.pop();
+      if (s.text.trim()) held.unshift(s);
+    }
     const prev = stream.at(-1);
     const next = lines[0];
     if (prev && next !== undefined && prev.text.length > 80 && !/^\s*\[/.test(next)) {
@@ -164,6 +170,7 @@ for (const page of bodyPages) {
       lines.shift();
     }
     // для віршів строфа просто продовжується без порожнього рядка
+    stream.push(...held);
   } else if (/^\[продовження\]\s*$/.test(lines[0] ?? '')) {
     lines.shift();
     stream.push({ text: '', scan: page.scan });
@@ -373,7 +380,10 @@ function render(w) {
       // вірш рендериться як простий текст: курсивні зірочки прибираємо, зірочки виносок лишаємо
       const plain = l.replace(ITALIC, '$1$2');
       if (plain !== l) report.strippedItalic.push(`${w.title}: ${l.trim().slice(0, 50)}`);
-      out.push(plain);
+      // довгий абзац прози всередині вірша («poems»: довідка з енциклопедії у «Власовцях») —
+      // прозовий абзац у розмітці вірша
+      if (kind === 'poem' && !inVerse && plain.trim().length > 110) out.push('', `> ${plain.trim()}`, '');
+      else out.push(plain);
     } else if (/^#{2,3} /.test(l)) {
       out.push(l);
     } else {
