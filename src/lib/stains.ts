@@ -106,17 +106,120 @@ function blobPath(rand: () => number, cx: number, cy: number, r: number, points 
   return closedPath(pts);
 }
 
-/** Чорнильна пляма: клякса з бризками навколо. Вміст SVG з viewBox «-50 -50 100 100». */
-export function inkBlot(seed: number, { size = 18, drops = 6 } = {}): string {
-  const rand = random(seed);
-  let out = `<path d="${blobPath(rand, 0, 0, size, 11, 0.45)}"/>`;
-  for (let i = 0; i < drops; i++) {
-    const a = rand() * Math.PI * 2;
-    const dist = size * between(rand, 1.35, 2.5);
-    const r = size * between(rand, 0.05, 0.2);
-    out += `<path d="${blobPath(rand, Math.cos(a) * dist, Math.sin(a) * dist, r, 6, 0.3)}"/>`;
+const TAU = Math.PI * 2;
+
+/** Різниця кутів у межах (−π, π]. */
+const angleDiff = (a: number, b: number) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
+
+/** Замкнений контур навколо (cx, cy), заданий радіусом як функцією кута. */
+function polarPath(radius: (a: number) => number, n: number, cx = 0, cy = 0): string {
+  const pts: Point[] = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * TAU;
+    const r = radius(a);
+    pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]);
+  }
+  return closedPath(pts);
+}
+
+/** Повільне «хитання» краю (частка радіуса): кілька синусоїд з випадковими фазами. */
+function wobble(rand: () => number, amount: number): (a: number) => number {
+  const waves = [2, 3, 5].map((k) => ({ k, phase: rand() * TAU, amp: (amount * between(rand, 0.4, 1)) / Math.sqrt(k) }));
+  return (a) => waves.reduce((sum, w) => sum + w.amp * Math.sin(w.k * a + w.phase), 0);
+}
+
+const dot = (x: number, y: number, r: number) => `<circle cx="${r1(x)}" cy="${r1(y)}" r="${r1(Math.max(r, 0.5))}"/>`;
+const drop = (rand: () => number, x: number, y: number, r: number) =>
+  r < 1.4 ? dot(x, y, r) : `<path d="${blobPath(rand, x, y, r, 7, 0.25)}"/>`;
+
+/**
+ * Клякса, що впала з пера: нерівне тіло, від якого на всі боки розходяться тонкі «промені»
+ * з краплями на кінцях, а далі за ними — бризки й дрібні цятки.
+ */
+function splat(rand: () => number): string {
+  const r = between(rand, 5.5, 9);
+  const wob = wobble(rand, 0.16);
+  const arms = Array.from({ length: 2 + Math.floor(rand() * 5) }, () => ({
+    a: rand() * TAU,
+    len: r * between(rand, 0.45, 1.7),
+    w: between(rand, 0.07, 0.2),
+  }));
+  const radius = (a: number) =>
+    r * (1 + wob(a)) + arms.reduce((sum, m) => sum + m.len * Math.exp(-((angleDiff(a, m.a) / m.w) ** 2)), 0);
+  let out = `<path d="${polarPath(radius, 120)}"/>`;
+  for (const m of arms) {
+    const tip = r + m.len;
+    if (rand() < 0.7) out += dot(Math.cos(m.a) * tip, Math.sin(m.a) * tip, between(rand, 0.9, 1.9));
+    let d = tip + between(rand, 2.5, 5);
+    for (let k = 0, n = Math.floor(rand() * 3.2); k < n; k++) {
+      const a = m.a + between(rand, -0.15, 0.15);
+      out += drop(rand, Math.cos(a) * d, Math.sin(a) * d, between(rand, 0.6, 1.7) / Math.sqrt(k + 1));
+      d += between(rand, 3, 7);
+    }
+  }
+  for (let k = 0, n = Math.floor(between(rand, 0, 4)); k < n; k++) {
+    const a = rand() * TAU;
+    const d = r * between(rand, 1.8, 3.8);
+    out += dot(Math.cos(a) * d, Math.sin(a) * d, between(rand, 0.5, 1.1));
   }
   return out;
+}
+
+/**
+ * Чорнильна пляма — клякса з променями. Вміст SVG з viewBox «-50 -50 100 100», колір — fill елемента.
+ * Перше випадкове число пропускаємо: з ним зерна дають ті самі форми, що в галереї, з якої
+ * обирали вигляд плям (клякси 7, 8, 9, 12, 14, 15, 18, 19, 21, 23, 24).
+ */
+export function inkBlot(seed: number): string {
+  const rand = random(seed);
+  rand();
+  return splat(rand);
+}
+
+/** Зерно з тексту (FNV-1a), наприклад з id книги: у кожної книги свої плями. */
+export function seedFrom(text: string): number {
+  let h = 0x811c9dc5;
+  for (const ch of text) h = Math.imul(h ^ ch.codePointAt(0)!, 0x01000193);
+  return h >>> 0;
+}
+
+/** Чорнильна пляма біля часової лінії: форма (seed), розмір, місце на лінії, кут, насиченість. */
+export type InkMark = { seed: number; box: string; y: string; dx: number; rot: number; opacity: number };
+
+/**
+ * Зсув плями від лінії в px: не на самій лінії, а помітно збоку — ліворуч (30–56 px, там під роком
+ * порожньо) або праворуч (22–34 px: пляма частково ховається під обкладинку, як під покладену на неї
+ * книжку, але не зникає під нею зовсім). Одне випадкове число u ∈ [0, 1) задає і бік, і відстань.
+ */
+const sideOffset = (u: number) => Math.round(u < 0.5 ? -(30 + 26 * (1 - u / 0.5)) : 22 + 12 * ((u - 0.5) / 0.5));
+
+/**
+ * Плями біля однієї книги на часовій лінії — 0, 1 чи 2, кожна своєї форми, у випадковому місці
+ * між цим роком і наступним (нижче за підпис року), трохи збоку від лінії, під випадковим кутом.
+ * Якщо під обкладинкою слід кави, плями лише вгорі, щоб не лізти в каву.
+ */
+export function inkMarks(seed: number, { coffee = false } = {}): InkMark[] {
+  const rand = random(seed);
+  const count = rand() < 0.2 ? 0 : rand() < 0.25 ? 2 : 1;
+  const top = coffee ? 0.35 : 1;
+  const spots = count === 2 ? [between(rand, 0, top * 0.4), between(rand, top * 0.65, top)] : [between(rand, 0, top)];
+  return spots.slice(0, count).map((t) => {
+    const seedOf = Math.floor(rand() * 2 ** 31);
+    const box = `${r1(between(rand, 3.5, 4.3))}rem`;
+    const dx = sideOffset(rand());
+    // Від низу підпису року до кінця блоку книги, де лінія доходить до наступного року.
+    // Ліворуч пляма опиняється під стовпчиком років, тож там відступи більші — і від свого року,
+    // і від року наступної книги.
+    const [from, to] = dx < 0 ? [4.6, 1.8] : [3.6, 1];
+    return {
+      seed: seedOf,
+      box,
+      y: `calc(${from}rem + (100% - ${r1(from + to)}rem) * ${t.toFixed(2)})`,
+      dx,
+      rot: Math.round(rand() * 360),
+      opacity: Number(between(rand, 0.78, 0.92).toFixed(2)),
+    };
+  });
 }
 
 /**

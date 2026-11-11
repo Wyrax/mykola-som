@@ -40,7 +40,8 @@ const allEpigraphs: Epigraph[] = epigraphs ?? (epigraph ? [{ text: epigraph, sou
     allEpigraphs.map((item) => (
       <blockquote class="epigraph">
         <p>{item.text}</p>
-        {item.source && <footer>{item.source}</footer>}
+        {/* не <footer>: вміст <footer> пошук Pagefind пропускає, а підпис має знаходитися */}
+        {item.source && <p class="epigraph-source">{item.source}</p>}
       </blockquote>
     ))
   }

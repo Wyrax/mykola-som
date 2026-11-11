@@ -83,13 +83,15 @@ function proseAsterisks(line) {
 const replaceAll = (text) =>
   Object.entries(config.replacements ?? {}).reduce((t, [from, to]) => t.split(from).join(to), text);
 
-const files = fs.readdirSync(pagesDir).filter((f) => /^\d{3}\.md$/.test(f)).sort();
+// Сторінку, якої немає в скані (текст узято з іншого видання), кладуть файлом з літерою після
+// номера: 092a.md стає одразу після 092.md.
+const files = fs.readdirSync(pagesDir).filter((f) => /^\d{3}[a-z]?\.md$/.test(f)).sort();
 const pages = files.map((file) => {
   const raw = replaceAll(fs.readFileSync(path.join(pagesDir, file), 'utf8').replace(/\r\n?/g, '\n'));
   const [first, ...rest] = raw.split('\n');
   const meta = /<!--\s*скан\s+(\d+)\s*·\s*с\.\s*([^\s·]+)(.*)-->/.exec(first);
   return {
-    scan: file.slice(0, 3),
+    scan: file.replace(/\.md$/, ''),
     page: meta?.[2] ?? '?',
     // порожня сторінка або службова (обкладинка, титул, вихідні дані) — у текст книги не йде
     blank: /порожня|службова/.test(meta?.[3] ?? ''),
@@ -370,7 +372,9 @@ const results = works.map((w, index) => {
     kind,
     order: index + 1,
     untitled: w.untitled || undefined,
-    section: w.section ? typography(w.section) : undefined,
+    // «noSection»: твори, що в змісті стоять наприкінці розділу, але до нього не належать
+    // (наприклад, «Слово про автора» після «Мініатюр») — на сайті вони йдуть окремо, без розділу.
+    section: w.section && !(config.noSection ?? []).includes(w.title) ? typography(w.section) : undefined,
     subtitle: fields.subtitle?.replace(/^\((.*)\)$/s, '$1'),
     dedication: fields.dedication,
     epigraph: fields.epigraph,

@@ -349,14 +349,14 @@ hr::after,
   white-space: pre-line;
 }
 
-.epigraph footer {
+.epigraph .epigraph-source {
   margin-top: 0.25em;
   font-style: normal;
   color: var(--muted);
   text-align: right;
 }
 
-.epigraph footer::before {
+.epigraph .epigraph-source::before {
   content: '— ';
 }
 
