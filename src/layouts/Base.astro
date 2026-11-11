@@ -67,5 +67,20 @@ const canonical = Astro.site && !noindex ? new URL(canonicalPath, Astro.site).hr
     <footer class="site-footer">
       <p>{SITE.author}. {SITE.tagline}</p>
     </footer>
+    <script is:inline>
+      // Позначає рядки віршів, що не вмістилися в один рядок екрана (див. .line--wrapped у global.css).
+      // ResizeObserver перевіряє їх знову, коли змінюється ширина екрана чи довантажується шрифт.
+      (() => {
+        const lines = document.querySelectorAll('.verse .line');
+        if (!lines.length || !('ResizeObserver' in window)) return;
+        const observer = new ResizeObserver((entries) => {
+          for (const { target, contentRect } of entries) {
+            const lineHeight = parseFloat(getComputedStyle(target).lineHeight);
+            target.classList.toggle('line--wrapped', contentRect.height > lineHeight * 1.5);
+          }
+        });
+        lines.forEach((line) => observer.observe(line));
+      })();
+    </script>
   </body>
 </html>
