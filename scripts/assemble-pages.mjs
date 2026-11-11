@@ -255,8 +255,13 @@ for (let i = 0; i < stream.length; i++) {
   }
   if (h3 || h4) {
     const caps = (h3 ?? h4)[1].trim();
-    const part = work.entry?.parts.find((p) => key(p.title) === key(caps));
-    work.lines.push('', `${h3 ? '##' : '###'} ${part?.title ?? (h4 ? caps : sentenceCase(caps))}`, '');
+    // частина циклу: назва зі змісту (з урахуванням tocAliases); якщо її там немає — надрукована,
+    // а надрукована ВЕЛИКИМИ ЛІТЕРАМИ — звичайним регістром
+    const wanted = key(config.tocAliases?.[caps] ?? caps);
+    const part = work.entry?.parts.find((p) => key(p.title) === wanted);
+    const partTitle = part?.title ?? (h4 || !isAllCaps(caps) ? caps : sentenceCase(caps));
+    if (h3 && !part) report.unmatched.push(`скан ${scan}: частина «${caps}» → ${partTitle}`);
+    work.lines.push('', `${h3 ? '##' : '###'} ${partTitle}`, '');
     continue;
   }
   const field = /^\[(підзаголовок|присвята|дата|автор|примітка)\]\s*(.*)$/.exec(line);
@@ -306,17 +311,47 @@ for (const w of works) {
 
 // ---------------------------------------------------------------- вид тексту й тіло
 
+/** Виділення Markdown (*…*, **…**, ***…***) → HTML: для рядків, що йдуть у сирий HTML. */
+const emphasisHtml = (s) =>
+  s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(EMPHASIS, (_, before, stars, inner) => {
+      const tags = { 1: ['<em>', '</em>'], 2: ['<strong>', '</strong>'], 3: ['<strong><em>', '</em></strong>'] }[stars.length];
+      return `${before}${tags[0]}${inner}${tags[1]}`;
+    });
+
 function render(w) {
-  const lines = w.lines;
+  // «poems»: твір у розділі прози, що весь є віршем («Хвала свині» серед придибенцій) — показуємо як вірш
+  const forcedPoem = (config.poems ?? []).includes(w.title);
+  const lines = forcedPoem ? w.lines.filter((l) => !/^\[\/?вірш\]\s*$/.test(l)) : w.lines;
   const isProse =
-    (config.proseSections ?? []).includes(w.section) ||
-    lines.some((l) => /^\[вірш\]/.test(l)) ||
-    lines.some((l) => l.trim().length > 110);
+    !forcedPoem &&
+    ((config.proseSections ?? []).includes(w.section) ||
+      lines.some((l) => /^\[вірш\]/.test(l)) ||
+      lines.some((l) => l.trim().length > 110));
   const kind = isProse ? 'prose' : 'poem';
   const out = [];
   let inVerse = false;
+  // Рядки «[праворуч]» (підпис і дата під листом) — абзац, вирівняний праворуч; кілька рядків
+  // поспіль — один абзац з переносами рядків.
+  let right = [];
+  const flushRight = () => {
+    if (right.length) out.push('', `<p class="text-right">${right.map(emphasisHtml).join('<br />')}</p>`, '');
+    right = [];
+  };
   for (const raw of lines) {
     let l = raw;
+    const rightLine = /^\s*\[праворуч\]\s*(.*)$/.exec(l);
+    if (rightLine && kind === 'prose' && !inVerse) {
+      right.push(rightLine[1].trim());
+      continue;
+    }
+    flushRight();
+    if (rightLine) {
+      report.warnings.push(`${w.title}: [праворуч] у вірші — рядок з відступом 16 пробілів`);
+      l = `${' '.repeat(16)}${rightLine[1].trim()}`;
+    }
     if (/^\[вірш\]\s*$/.test(l)) {
       out.push('', '```verse');
       inVerse = true;
@@ -345,6 +380,7 @@ function render(w) {
       out.push(l.trim() ? proseAsterisks(l.trim()) : '');
     }
   }
+  flushRight();
   // не більше одного порожнього рядка поспіль
   const body = out
     .join('\n')

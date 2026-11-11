@@ -483,6 +483,18 @@ hr::after,
   text-align: center;
 }
 
+/* Рядки, надруковані праворуч: підпис і дата під листом («Із листа:», «1960 р.»). */
+.prose p.text-right {
+  margin-top: calc(var(--line) * 0.5);
+  text-indent: 0;
+  text-align: right;
+}
+
+/* Дата під листом і підпис наступного листа — з проміжком, як у книжці. */
+.prose p.text-right + p.text-right {
+  margin-top: var(--line);
+}
+
 .prose h2,
 .prose h3 {
   margin: calc(var(--line) * 1.5) 0 var(--line);
