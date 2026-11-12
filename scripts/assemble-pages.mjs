@@ -191,6 +191,7 @@ for (const page of bodyPages) {
 const works = [];
 let currentSection;
 let work = null;
+const sectionEpigraphs = {};
 let tocCursor = 0;
 
 function matchTitle(caps) {
@@ -263,6 +264,20 @@ for (let i = 0; i < stream.length; i++) {
     continue;
   }
   if (!work) {
+    // епіграф одразу під назвою розділу — епіграф розділу (у book.yaml → sectionEpigraphs)
+    if (currentSection && /^\[епіграф\]\s*$/.test(line)) {
+      const epigraph = [];
+      let source;
+      for (i++; i < stream.length && !/^\[\/епіграф\]/.test(stream[i].text); i++) {
+        const l = stream[i].text.trim();
+        if (!l) continue;
+        const src = /^\[джерело\]\s*(.*)$/.exec(l);
+        if (src) source = src[1];
+        else epigraph.push(l);
+      }
+      (sectionEpigraphs[currentSection] ??= []).push(source ? { text: epigraph.join('\n'), source } : { text: epigraph.join('\n') });
+      continue;
+    }
     if (line.trim()) report.warnings.push(`скан ${scan}: текст поза твором пропущено: «${line.slice(0, 60)}»`);
     continue;
   }
@@ -484,7 +499,18 @@ if (!fs.existsSync(bookYaml) && config.book) {
   const yaml = Object.entries(b)
     .map(([k, v]) => `${k}: ${typeof v === 'string' ? JSON.stringify(v) : v}`)
     .join('\n');
-  fs.writeFileSync(bookYaml, `${yaml}\n`);
+  // епіграфи розділів — вкладений YAML (рядки в JSON-лапках — це теж коректний YAML)
+  const epigraphYaml = Object.keys(sectionEpigraphs).length
+    ? `\nsectionEpigraphs:\n${Object.entries(sectionEpigraphs)
+        .map(
+          ([section, items]) =>
+            `  ${JSON.stringify(section)}:\n${items
+              .map((e) => `    - text: ${JSON.stringify(e.text)}${e.source ? `\n      source: ${JSON.stringify(e.source)}` : ''}`)
+              .join('\n')}`,
+        )
+        .join('\n')}`
+    : '';
+  fs.writeFileSync(bookYaml, `${yaml}${epigraphYaml}\n`);
 }
 for (const r of results) fs.writeFileSync(path.join(dir, `${r.slug}.md`), `${frontmatter(r.data)}\n\n${r.body}\n`);
 console.log(`\nЗаписано ${results.length} файлів у ${path.relative(ROOT, dir)}.`);

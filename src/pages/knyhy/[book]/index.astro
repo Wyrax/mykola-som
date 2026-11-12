@@ -65,6 +65,13 @@ const shareImage = await coverShareImage(book, Astro.site);
         sections.map((group) => (
           <>
             {group.section && <h3 class="toc-section">{group.section}</h3>}
+            {group.section &&
+              book.data.sectionEpigraphs?.[group.section]?.map((item) => (
+                <blockquote class="epigraph toc-epigraph">
+                  <p>{item.text}</p>
+                  {item.source && <p class="epigraph-source">{item.source}</p>}
+                </blockquote>
+              ))}
             <ol class="toc">
               {group.texts.map((text) => (
                 <li>

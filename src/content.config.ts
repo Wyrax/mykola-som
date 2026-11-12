@@ -25,6 +25,10 @@ const books = defineCollection({
       description: z.string().optional(),
       cover: image().optional(),
       draft: z.boolean().default(false),
+      /** Епіграфи розділів: назва розділу → епіграфи; на сторінці книги — під назвою розділу в змісті. */
+      sectionEpigraphs: z
+        .record(z.string(), z.array(z.object({ text: z.string(), source: z.string().optional() })))
+        .optional(),
     }),
 });
 

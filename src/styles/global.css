@@ -405,6 +405,12 @@ hr::after,
   margin-top: 0;
 }
 
+/* епіграф розділу — під його назвою в змісті книги */
+.toc-epigraph {
+  margin-top: calc(var(--line) * 0.25);
+  margin-bottom: calc(var(--line) * 0.75);
+}
+
 .toc-author {
   color: var(--muted);
   font-style: italic;
