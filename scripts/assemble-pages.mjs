@@ -276,9 +276,10 @@ for (let i = 0; i < stream.length; i++) {
     const [, name, value] = field;
     const map = { підзаголовок: 'subtitle', присвята: 'dedication', дата: 'date', автор: 'author', примітка: 'note' };
     const keyName = map[name];
-    // «Олесь ЖОЛДАК» → «Олесь Жолдак»: слова великими літерами в імені автора
+    // «Олесь ЖОЛДАК» → «Олесь Жолдак»: слова великими літерами в імені автора — лише в першому
+    // рядку підпису (ім’я); у наступних (звання) абревіатури лишаються: «СРСР», «УРСР»
     const normalized =
-      keyName === 'author'
+      keyName === 'author' && !work.fields.author
         ? value.replace(/\p{L}+/gu, (w) => (w.length > 1 && w === w.toLocaleUpperCase('uk') ? nameCase(w) : w))
         : value;
     work.fields[keyName] = work.fields[keyName] ? `${work.fields[keyName]}\n${normalized}` : normalized;
