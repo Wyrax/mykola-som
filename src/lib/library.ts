@@ -72,7 +72,7 @@ export function bookMeta(book: Book, texts: Text[], { year = true } = {}): strin
     .join(' · ');
 }
 
-/** Кількість «основних» текстів книги: віршів у поезії, текстів у прозі (без передмов тощо). */
+/** Кількість «основних» текстів книги: віршів у поезії, творів у прозі (без передмов тощо). */
 export function mainTextCount(book: Book, texts: Text[]): number {
   // у змішаній книзі — усі твори самого автора (передмова іншого автора не рахується)
   if (book.data.kind === 'mixed') return texts.filter((text) => !text.data.author).length;

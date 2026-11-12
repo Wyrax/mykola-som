@@ -11,6 +11,6 @@ export function plural(n: number, forms: Forms): string {
 
 export const TEXT_FORMS = {
   poetry: { one: 'вірш', few: 'вірші', many: 'віршів' },
-  prose: { one: 'текст', few: 'тексти', many: 'текстів' },
+  prose: { one: 'твір', few: 'твори', many: 'творів' },
   mixed: { one: 'твір', few: 'твори', many: 'творів' },
 } as const;

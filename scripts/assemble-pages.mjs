@@ -163,7 +163,13 @@ for (const page of bodyPages) {
     const next = lines[0];
     if (prev && next !== undefined && prev.text.length > 80 && !/^\s*\[/.test(next)) {
       // абзац прози продовжується на новій сторінці
-      if (/\p{L}-$/u.test(prev.text) && /^\p{Ll}/u.test(next)) {
+      // справжній дефіс на межі сторінок: «будь-|який», «казна-|що», «хто-|небудь»
+      const realHyphen =
+        /(?<!\p{L})(будь|казна|хтозна|бозна)-$/iu.test(prev.text) || /^(небудь|то)(?!\p{L})/u.test(next);
+      if (/\p{L}-$/u.test(prev.text) && /^\p{Ll}/u.test(next) && realHyphen) {
+        report.joins.push(`скан ${page.scan}: «${prev.text.slice(-20)}» + «${next.slice(0, 20)}» → з дефісом`);
+        prev.text = prev.text + next;
+      } else if (/\p{L}-$/u.test(prev.text) && /^\p{Ll}/u.test(next)) {
         report.joins.push(`скан ${page.scan}: «${prev.text.slice(-20)}» + «${next.slice(0, 20)}» → без дефіса`);
         prev.text = prev.text.slice(0, -1) + next;
       } else prev.text = `${prev.text} ${next}`;
@@ -333,9 +339,11 @@ function render(w) {
   // «poems»: твір у розділі прози, що весь є віршем («Хвала свині» серед придибенцій) — показуємо як вірш
   const forcedPoem = (config.poems ?? []).includes(w.title);
   const lines = forcedPoem ? w.lines.filter((l) => !/^\[\/?вірш\]\s*$/.test(l)) : w.lines;
+  // у книзі прози (book.kind: prose) проза — усе, крім «poems», навіть коротка придибенція з короткими абзацами
   const isProse =
     !forcedPoem &&
-    ((config.proseSections ?? []).includes(w.section) ||
+    (config.book?.kind === 'prose' ||
+      (config.proseSections ?? []).includes(w.section) ||
       lines.some((l) => /^\[вірш\]/.test(l)) ||
       lines.some((l) => l.trim().length > 110));
   const kind = isProse ? 'prose' : 'poem';
@@ -387,6 +395,9 @@ function render(w) {
       else out.push(plain);
     } else if (/^#{2,3} /.test(l)) {
       out.push(l);
+    } else if (/^(\*\s*){3}$/.test(l.trim())) {
+      // розділювач усередині прозового твору (орнамент між двома віршами) — «* * *» на сайті
+      out.push('', '***', '');
     } else {
       out.push(l.trim() ? proseAsterisks(l.trim()) : '');
     }
