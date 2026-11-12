@@ -4,14 +4,14 @@
  * Рік — тонким пером (Bad Script), назва — Oswald, підзаголовок — жирний курсив основного шрифту.
  * Пунктирна лінія нерівно звивається між роками й проходить точно через їхні точки
  * (її малює невеликий скрипт за справжніми позиціями); біля лінії — чорнильні плями,
- * під обкладинками — сліди від кружки з кавою (коричневий акцент сайту), які не заходять на текст.
+ * біля деяких книг — сліди від кружки з кавою (коричневий акцент сайту), які не заходять на текст.
  * Обкладинки лежать трохи навскіс, як книжки на столі.
  */
 import '@fontsource/bad-script';
 import '@fontsource-variable/oswald';
 import BookCover from './BookCover.astro';
 import { bookMeta, getLibrary } from '../lib/library';
-import { coffeeStain, inkBlot, inkMarks, random, seedFrom, wavyLineTile } from '../lib/stains';
+import { coffeeMark, coffeeStain, inkBlot, inkMarks, seedFrom, wavyLineTile, type CoffeeMark } from '../lib/stains';
 import { bookUrl } from '../lib/urls';
 
 const library = await getLibrary();
@@ -22,17 +22,12 @@ const span = years.length ? `${Math.min(...years)}–${Math.max(...years)}` : ''
 const fallbackLine = wavyLineTile({ seed: 19, width: 34, amplitude: 12, dash: 5, gap: 11 });
 
 /**
- * Сліди кави — під кожною другою обкладинкою, біля її нижнього лівого кута (x, y — частка розміру
- * обкладинки): там слід видно, але він не заходить ні на рік, ні на текст, хоч би яким довгим був опис.
- * На кожному наступному колі (5-та книга і далі) зерно інше, тож сліди не повторюються.
+ * Сліди кави — не біля кожної книги і щоразу в іншому місці: ліворуч від пунктира під роком, з-під
+ * лівого краю обкладинки або з-під верхнього чи нижнього (див. coffeeMark). Зерно — з id книги, тож
+ * слід не змінюється від збирання до збирання. COFFEE_SALT підібрано, щоб на теперішніх книгах сліди
+ * стояли нерівно (не через одну книгу) і в різних місцях; змінивши його, отримаєте інший набір.
  */
-type Coffee = { seed: number; x: string; y: string; size: string };
-const COFFEE: (Coffee | undefined)[] = [
-  undefined,
-  { seed: 23, x: '0%', y: '90%', size: '6.5rem' },
-  undefined,
-  { seed: 8, x: '2%', y: '100%', size: '6rem' },
-];
+const COFFEE_SALT = 189;
 
 /**
  * Чорнильні плями — на лінії між роками. Кількість, форма, місце й кут — випадкові, але свої для
@@ -42,13 +37,8 @@ const COFFEE: (Coffee | undefined)[] = [
  */
 const INK_SALT = 13;
 
-/** Кожен слід кави — свого розміру (60–100 % від size) і під своїм кутом; стале зерно — той самий вигляд. */
-function coffeeStyle({ seed, x, y, size }: Coffee): string {
-  const rand = random(seed * 7919 + 131);
-  const scale = (0.6 + 0.4 * rand()).toFixed(2);
-  const rot = Math.round(rand() * 360);
-  return `--x: ${x}; --y: ${y}; --size: calc(${size} * ${scale}); --rot: ${rot}deg`;
-}
+const coffeeStyle = ({ x, y, yNarrow, size, rot }: CoffeeMark): string =>
+  `--x: ${x}; --y: ${y}; --y-narrow: ${yNarrow}; --size: ${size}; --rot: ${rot}deg`;
 ---
 
 <section class="retro" aria-labelledby="books-title">
@@ -75,12 +65,22 @@ function coffeeStyle({ seed, x, y, size }: Coffee): string {
     <ol class="retro-list">
       {
         library.map(({ book, texts }, i) => {
-          const base = COFFEE[i % COFFEE.length];
-          const coffee = base && { ...base, seed: base.seed + Math.floor(i / COFFEE.length) * 1009 };
+          const coffee = coffeeMark(seedFrom(book.id) + COFFEE_SALT);
           const last = i === library.length - 1;
-          const ink = last ? [] : inkMarks(seedFrom(book.id) + INK_SALT, { coffee: Boolean(coffee) });
+          const ink = last ? [] : inkMarks(seedFrom(book.id) + INK_SALT, { coffee: coffee?.at });
+          const coffeeSvg = (c: CoffeeMark) => (
+            <svg
+              class:list={['coffee', `coffee--${c.at}`]}
+              viewBox="-60 -60 120 120"
+              style={coffeeStyle(c)}
+              aria-hidden="true"
+              focusable="false"
+              set:html={coffeeStain(c.seed)}
+            />
+          );
           return (
             <li class="retro-item">
+              {coffee?.at === 'line' && coffeeSvg(coffee)}
               {ink.map((s) => (
                 <svg
                   class="stain"
@@ -97,16 +97,7 @@ function coffeeStyle({ seed, x, y, size }: Coffee): string {
               </p>
               <div class="retro-card">
                 <div class="retro-cover-wrap">
-                  {coffee && (
-                    <svg
-                      class="coffee"
-                      viewBox="-60 -60 120 120"
-                      style={coffeeStyle(coffee)}
-                      aria-hidden="true"
-                      focusable="false"
-                      set:html={coffeeStain(coffee.seed)}
-                    />
-                  )}
+                  {coffee?.at === 'cover' && coffeeSvg(coffee)}
                   <a class="retro-cover" href={bookUrl(book.id)} tabindex="-1" aria-hidden="true">
                     <BookCover book={book} sizes="(max-width: 40rem) 5.5rem, 7.5rem" />
                   </a>
@@ -361,7 +352,7 @@ function coffeeStyle({ seed, x, y, size }: Coffee): string {
     align-items: start;
   }
 
-  /* Обгортка обкладинки: тут лежить слід від кави — під книжкою, нікуди не рухається. */
+  /* Обгортка обкладинки: тут лежить слід від кави з-під книжки — нікуди не рухається разом з нею. */
   .retro-cover-wrap {
     position: relative;
     z-index: 0;
@@ -380,6 +371,13 @@ function coffeeStyle({ seed, x, y, size }: Coffee): string {
     overflow: visible;
     pointer-events: none;
     color: var(--coffee);
+  }
+
+  /* Слід ліворуч від пунктира, під роком: x — зсув від лінії, y — від верху блоку книги.
+     Над лінією, але під роком і плямами. */
+  .coffee--line {
+    z-index: 0;
+    left: calc(var(--rail) + var(--x));
   }
 
   /* Обкладинки навскіс, як книжки, покладені на стіл. */
@@ -484,8 +482,14 @@ function coffeeStyle({ seed, x, y, size }: Coffee): string {
     }
 
     .coffee {
+      top: var(--y-narrow);
       width: calc(var(--size) * 0.8);
       height: calc(var(--size) * 0.8);
+    }
+
+    /* ліворуч від лінії тут місця немає — слід біля лівого краю обкладинки */
+    .coffee--line {
+      left: calc(var(--rail) + 1.4rem);
     }
 
     .stain {

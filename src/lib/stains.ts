@@ -196,17 +196,21 @@ const sideOffset = (u: number) => Math.round(u < 0.5 ? -(30 + 26 * (1 - u / 0.5)
 /**
  * Плями біля однієї книги на часовій лінії — 0, 1 чи 2, кожна своєї форми, у випадковому місці
  * між цим роком і наступним (нижче за підпис року), трохи збоку від лінії, під випадковим кутом.
- * Якщо під обкладинкою слід кави, плями лише вгорі, щоб не лізти в каву.
+ * Якщо біля книги слід кави, плями — з другого боку лінії, щоб не лізти в каву: кава ліворуч від
+ * лінії (coffee: 'line') — плями праворуч, кава біля обкладинки ('cover') — плями ліворуч.
  */
-export function inkMarks(seed: number, { coffee = false } = {}): InkMark[] {
+export function inkMarks(seed: number, { coffee }: { coffee?: CoffeeMark['at'] } = {}): InkMark[] {
   const rand = random(seed);
   const count = rand() < 0.2 ? 0 : rand() < 0.25 ? 2 : 1;
-  const top = coffee ? 0.35 : 1;
-  const spots = count === 2 ? [between(rand, 0, top * 0.4), between(rand, top * 0.65, top)] : [between(rand, 0, top)];
+  const spots = count === 2 ? [between(rand, 0, 0.4), between(rand, 0.65, 1)] : [between(rand, 0, 1)];
   return spots.slice(0, count).map((t) => {
     const seedOf = Math.floor(rand() * 2 ** 31);
     const box = `${r1(between(rand, 3.5, 4.3))}rem`;
-    const dx = sideOffset(rand());
+    // u < 0.5 — ліворуч від лінії, інакше праворуч; бік, зайнятий кавою, віддзеркалюємо
+    let u = rand();
+    if (coffee === 'line' && u < 0.5) u += 0.5;
+    if (coffee === 'cover' && u >= 0.5) u -= 0.5;
+    const dx = sideOffset(u);
     // Від низу підпису року до кінця блоку книги, де лінія доходить до наступного року.
     // Ліворуч пляма опиняється під стовпчиком років, тож там відступи більші — і від свого року,
     // і від року наступної книги.
@@ -220,6 +224,49 @@ export function inkMarks(seed: number, { coffee = false } = {}): InkMark[] {
       opacity: Number(between(rand, 0.78, 0.92).toFixed(2)),
     };
   });
+}
+
+/**
+ * Слід від кружки з кавою біля книги на часовій лінії. Чи він є і де лежить — випадково, але своє
+ * для кожної книги (зерно — з її id), тож сліди стоять нерівно, а не через одну книгу.
+ * - at: 'line' — ліворуч від пунктира, під роком, вище чи нижче: x — зсув від лінії, y — від верху
+ *   блоку книги (на вузькому екрані ліворуч від лінії місця немає — там слід біля лівого краю обкладинки);
+ * - at: 'cover' — з-під обкладинки: з-під її лівого краю (праворуч від пунктира) на будь-якій висоті
+ *   або з-під верхнього чи нижнього краю, ближче до лінії чи правіше; x, y — частка розміру обкладинки.
+ *   Праворуч від обкладинки слідів немає — там текст. На вузькому екрані рік стоїть над обкладинкою,
+ *   тож слід з-під верхнього краю переходить до нижнього (yNarrow).
+ * size — уже з урахуванням розміру сліду, rot — кут.
+ */
+export type CoffeeMark = {
+  seed: number;
+  at: 'line' | 'cover';
+  x: string;
+  y: string;
+  yNarrow: string;
+  size: string;
+  rot: number;
+};
+
+export function coffeeMark(seed: number): CoffeeMark | undefined {
+  const rand = random(seed);
+  if (rand() >= 0.45) return undefined;
+  const stain = Math.floor(rand() * 2 ** 31);
+  const size = `${r1(between(rand, 4, 6.6))}rem`;
+  const rot = Math.round(rand() * 360);
+  const kind = rand();
+  const pct = (a: number, b: number) => `${Math.round(between(rand, a, b))}%`;
+  if (kind < 0.3) {
+    // під роком: нижче за підпис року і вище за рік наступної книги (слід — до 3,3rem у радіусі)
+    const y = `calc(6.6rem + (100% - 10.1rem) * ${rand().toFixed(2)})`;
+    return { seed: stain, at: 'line', x: `${r1(between(rand, -5, -3.4))}rem`, y, yNarrow: y, size, rot };
+  }
+  if (kind < 0.5) {
+    const y = pct(15, 100);
+    return { seed: stain, at: 'cover', x: pct(0, 6), y, yNarrow: y, size, rot };
+  }
+  const top = kind < 0.72;
+  const y = top ? pct(-4, 6) : pct(92, 106);
+  return { seed: stain, at: 'cover', x: pct(0, 70), y, yNarrow: top ? `${100 - parseInt(y, 10)}%` : y, size, rot };
 }
 
 /**
