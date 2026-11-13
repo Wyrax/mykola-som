@@ -59,6 +59,8 @@ const shareImage = await coverShareImage(book, Astro.site);
       }
     </header>
 
+    {/* книга, яку ще відновлюють, буває без жодного твору — тоді змісту немає */}
+    {texts.length > 0 && (
     <section aria-labelledby="zmist">
       <h2 id="zmist" class="section-title">Зміст</h2>
       {
@@ -86,6 +88,7 @@ const shareImage = await coverShareImage(book, Astro.site);
         ))
       }
     </section>
+    )}
 
     {
       index.length > 0 && (
