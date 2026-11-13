@@ -5,6 +5,7 @@ import '../styles/global.css';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import { SITE } from '../site';
 import { url } from '../lib/urls';
+import { getVisitCount } from '../lib/visitCount';
 
 interface Props {
   title?: string;
@@ -24,6 +25,8 @@ const fullTitle = title ? `${title} — ${SITE.title}` : `${SITE.title}. ${SITE.
 const { pathname } = Astro.url;
 const canonicalPath = pathname.endsWith('/') || /\.\w+$/.test(pathname) ? pathname : `${pathname}/`;
 const canonical = Astro.site && !noindex ? new URL(canonicalPath, Astro.site).href : undefined;
+
+const visitCount = await getVisitCount();
 ---
 
 <!doctype html>
@@ -66,6 +69,10 @@ const canonical = Astro.site && !noindex ? new URL(canonicalPath, Astro.site).hr
     </main>
     <footer class="site-footer">
       <p>{SITE.author}. {SITE.tagline}</p>
+      <p>Антон Сом. Сайт</p>
+      {/* Сумарні перегляди сайту (GoatCounter), запитані під час збирання сайту — див. lib/visitCount.ts.
+          Рядка немає, поки на wyrax.goatcounter.com не ввімкнено «Allow adding visitor counts on your website». */}
+      {visitCount && <p class="visit-counter">Переглядів сторінок: {visitCount}</p>}
     </footer>
     <script is:inline>
       // Позначає рядки віршів, що не вмістилися в один рядок екрана (див. .line--wrapped у global.css).
@@ -82,5 +89,7 @@ const canonical = Astro.site && !noindex ? new URL(canonicalPath, Astro.site).hr
         lines.forEach((line) => observer.observe(line));
       })();
     </script>
+    <!-- Лічильник відвідувань (GoatCounter); на localhost і при попередньому перегляді не рахує. -->
+    <script data-goatcounter="https://wyrax.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
   </body>
 </html>

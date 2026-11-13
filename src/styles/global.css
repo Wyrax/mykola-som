@@ -246,6 +246,12 @@ code {
   margin: 0;
 }
 
+.visit-counter {
+  margin-top: 0.35em !important;
+  font-size: 0.8125rem;
+  opacity: 0.8;
+}
+
 /* ---------- Спільні елементи ---------- */
 
 .eyebrow,
