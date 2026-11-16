@@ -304,6 +304,8 @@ for (let i = 0; i < stream.length; i++) {
         ? value.replace(/\p{L}+/gu, (w) => (w.length > 1 && w === w.toLocaleUpperCase('uk') ? nameCase(w) : w))
         : value;
     work.fields[keyName] = work.fields[keyName] ? `${work.fields[keyName]}\n${normalized}` : normalized;
+    // ім’я автора над назвою (спогади в «З матір’ю на самоті»): текст після нього — сам твір
+    if (keyName === 'author' && !work.lines.some((l) => l.trim())) work.authorAbove = true;
     continue;
   }
   if (/^\[епіграф\]\s*$/.test(line)) {
@@ -321,7 +323,7 @@ for (let i = 0; i < stream.length; i++) {
   }
   // Текст після підпису [автор] (наприклад, «Від автора сеї книжки» під передмовою) — це вже не
   // частина твору: збираємо його в примітку, що показується під підписом.
-  if (work.fields.author) {
+  if (work.fields.author && !work.authorAbove) {
     (work.postscript ??= []).push(text.trim());
     continue;
   }
