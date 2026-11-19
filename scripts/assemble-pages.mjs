@@ -16,6 +16,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { frontmatter, slugify } from './lib/text.mjs';
+import { fixMarkdown, fixYaml } from './lib/typography.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -512,7 +513,8 @@ if (!fs.existsSync(bookYaml) && config.book) {
         )
         .join('\n')}`
     : '';
-  fs.writeFileSync(bookYaml, `${yaml}${epigraphYaml}\n`);
+  fs.writeFileSync(bookYaml, fixYaml(`${yaml}${epigraphYaml}\n`));
 }
-for (const r of results) fs.writeFileSync(path.join(dir, `${r.slug}.md`), `${frontmatter(r.data)}\n\n${r.body}\n`);
+// типографіка (тире, виноски) — та сама, що й у npm run typography
+for (const r of results) fs.writeFileSync(path.join(dir, `${r.slug}.md`), fixMarkdown(`${frontmatter(r.data)}\n\n${r.body}\n`));
 console.log(`\nЗаписано ${results.length} файлів у ${path.relative(ROOT, dir)}.`);

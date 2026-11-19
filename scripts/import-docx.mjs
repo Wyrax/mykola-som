@@ -31,6 +31,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import JSZip from 'jszip';
 import { frontmatter, slugify } from './lib/text.mjs';
+import { fixMarkdown } from './lib/typography.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const LADDER = ' '.repeat(16);
@@ -483,7 +484,7 @@ async function main() {
     fs.writeFileSync(bookYaml, `title: ${JSON.stringify(bookTitle)}\nkind: ${opts.kind}\norder: 1\n`);
   }
   for (const t of texts) {
-    fs.writeFileSync(path.join(dir, `${t.slug}.md`), `${frontmatter(t.data)}\n\n${t.body}\n`);
+    fs.writeFileSync(path.join(dir, `${t.slug}.md`), fixMarkdown(`${frontmatter(t.data)}\n\n${t.body}\n`));
   }
   console.log(`\nЗаписано ${texts.length} файлів у ${path.relative(ROOT, dir)}.`);
 }

@@ -8,7 +8,9 @@
   },
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "node scripts/typography.mjs",
     "build": "astro build && pagefind --site dist",
+    "typography": "node scripts/typography.mjs",
     "preview": "astro preview",
     "check": "astro check",
     "import-docx": "node scripts/import-docx.mjs",
