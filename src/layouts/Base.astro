@@ -57,7 +57,15 @@ const visitCount = await getVisitCount();
   <body>
     <a class="skip-link" href="#main">Перейти до змісту сторінки</a>
     <header class="site-header">
-      <a class="site-title" href={url()}>{SITE.title}</a>
+      {/* Підпис «Микола Сом» (SVG як маска, зафарбована кольором тексту — тож він міняється разом
+          зі світлою й темною темою); назву сайту читають екранні читачі. */}
+      <a class="site-title" href={url()} aria-label={SITE.title}>
+        <span
+          class="site-signature"
+          aria-hidden="true"
+          style={`--signature: url('${url('images/mykola-som-signature.svg')}')`}
+        ></span>
+      </a>
       <nav class="site-nav" aria-label="Головне меню">
         <a href={url('pro-avtora/')} aria-current={current === 'about' ? 'page' : undefined}>Про автора</a>
         <a href={url('poshuk/')} aria-current={current === 'search' ? 'page' : undefined}>Пошук</a>

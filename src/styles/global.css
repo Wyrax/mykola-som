@@ -179,11 +179,33 @@ code {
 }
 
 .site-title {
+  display: inline-flex;
   color: var(--text);
-  font-weight: 600;
-  font-size: 1.0625rem;
-  letter-spacing: 0.02em;
   text-decoration: none;
+}
+
+/* Підпис Миколи Сома замість назви сайту: public/images/mykola-som-signature.svg (viewBox 567×150) */
+.site-signature {
+  display: block;
+  height: 2.5rem;
+  aspect-ratio: 567 / 150;
+  background-color: currentColor;
+  -webkit-mask: var(--signature) center / contain no-repeat;
+  mask: var(--signature) center / contain no-repeat;
+}
+
+/* на телефоні підпис менший, щоб шапка вміщалася в один рядок із меню */
+@media (max-width: 26rem) {
+  .site-signature {
+    height: 1.625rem;
+  }
+}
+
+@media (forced-colors: active) {
+  .site-signature {
+    forced-color-adjust: none;
+    background-color: LinkText;
+  }
 }
 
 .site-nav {
