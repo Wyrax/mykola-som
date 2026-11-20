@@ -377,6 +377,13 @@ hr::after,
   white-space: pre-line;
 }
 
+/* Текст епіграфа завжди біля правого краю, навіть коли підпис під ним довший (як у «Д’Артаньяні»):
+   рядки всередині вирівняні ліворуч, а сам текст — праворуч. */
+.epigraph p:not(.epigraph-source) {
+  width: fit-content;
+  margin-left: auto;
+}
+
 .epigraph .epigraph-source {
   margin-top: 0.25em;
   font-style: normal;
