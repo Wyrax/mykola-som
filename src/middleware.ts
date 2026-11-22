@@ -1,5 +1,5 @@
 import { defineMiddleware } from 'astro:middleware';
-import { bindInitialsInHtml } from './lib/typography';
+import { typographHtml } from './lib/typography';
 
 /**
  * Типографіка всіх сторінок сайту в одному місці: тексти творів, епіграфи, присвяти, примітки,
@@ -9,6 +9,6 @@ import { bindInitialsInHtml } from './lib/typography';
 export const onRequest = defineMiddleware(async (_context, next) => {
   const response = await next();
   if (!response.headers.get('content-type')?.includes('text/html')) return response;
-  const html = bindInitialsInHtml(await response.text());
+  const html = typographHtml(await response.text());
   return new Response(html, { status: response.status, statusText: response.statusText, headers: response.headers });
 });
