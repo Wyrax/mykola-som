@@ -6,9 +6,47 @@
 import Base from '../layouts/Base.astro';
 import BookTimeline from '../components/BookTimeline.astro';
 import { SITE } from '../site';
+import { url } from '../lib/urls';
+
+// Структуровані дані для пошуковиків (schema.org): сайт присвячений людині Микола Сом, а стаття
+// у Вікіпедії — про ту саму людину. Дати й місця — зі сторінки «Про автора».
+const home = new URL(url(), Astro.site).href;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${home}#website`,
+      url: home,
+      name: SITE.title,
+      description: SITE.description,
+      inLanguage: 'uk',
+      about: { '@id': `${home}#person` },
+    },
+    {
+      '@type': 'Person',
+      '@id': `${home}#person`,
+      name: 'Микола Сом',
+      alternateName: 'Микола Данилович Сом',
+      givenName: 'Микола',
+      familyName: 'Сом',
+      birthDate: '1935-01-05',
+      deathDate: '2013-03-27',
+      birthPlace: { '@type': 'Place', name: 'Требухів, Броварський район, Київська область, Україна' },
+      deathPlace: { '@type': 'Place', name: 'Київ, Україна' },
+      description: 'Український поет-шістдесятник, публіцист, учитель.',
+      jobTitle: 'поет',
+      image: new URL(url('images/mykola-som.jpg'), Astro.site).href,
+      url: home,
+      mainEntityOfPage: new URL(url('pro-avtora/'), Astro.site).href,
+      sameAs: ['https://uk.wikipedia.org/wiki/Сом_Микола_Данилович'],
+    },
+  ],
+};
 ---
 
 <Base>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
   <section class="hero">
     <h1 class="hero-title">{SITE.author}</h1>
     <p class="hero-tagline">{SITE.tagline}</p>

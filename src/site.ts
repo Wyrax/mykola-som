@@ -3,7 +3,7 @@ export const SITE = {
   author: 'Микола Сом',
   title: 'Микола Сом',
   tagline: 'Поезія і проза',
-  description: 'Твори Миколи Сома: поезія і проза.',
+  description: 'Микола Сом (1935–2013) — український поет-шістдесятник. Повні тексти його книжок поезії та прози.',
 } as const;
 
 export const BOOK_KIND_LABEL = {

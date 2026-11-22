@@ -26,6 +26,12 @@ const { pathname } = Astro.url;
 const canonicalPath = pathname.endsWith('/') || /\.\w+$/.test(pathname) ? pathname : `${pathname}/`;
 const canonical = Astro.site && !noindex ? new URL(canonicalPath, Astro.site).href : undefined;
 
+// Прев’ю в соцмережах: обкладинка книги, а де її немає (головна, «Про автора», пошук) —
+// картка 1200×630 з малюнком і підписом (public/images/og-preview.jpg; формат, який Фейсбук не обрізає).
+const defaultShareImage = Astro.site ? new URL(url('images/og-preview.jpg'), Astro.site).href : undefined;
+const shareImage = image ?? defaultShareImage;
+const isDefaultShareImage = !image && Boolean(defaultShareImage);
+
 const visitCount = await getVisitCount();
 ---
 
@@ -38,11 +44,24 @@ const visitCount = await getVisitCount();
     <meta name="description" content={description} />
     {canonical && <link rel="canonical" href={canonical} />}
     {noindex && <meta name="robots" content="noindex" />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.title} />
     <meta property="og:title" content={title ?? SITE.title} />
     <meta property="og:description" content={description} />
     <meta property="og:locale" content="uk_UA" />
     {canonical && <meta property="og:url" content={canonical} />}
-    {image && <meta property="og:image" content={image} />}
+    {shareImage && <meta property="og:image" content={shareImage} />}
+    {
+      isDefaultShareImage && (
+        <>
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:image:alt" content="Микола Сом: малюнок і підпис" />
+        </>
+      )
+    }
+    {/* велика картинка — лише для альбомної картки; вертикальну обкладинку X (Twitter) обрізав би */}
+    <meta name="twitter:card" content={isDefaultShareImage ? 'summary_large_image' : 'summary'} />
     <link rel="sitemap" href={url('sitemap-index.xml')} />
     <link rel="icon" type="image/svg+xml" href={url('favicon.svg')} />
     <meta name="generator" content={Astro.generator} />
@@ -95,6 +114,33 @@ const visitCount = await getVisitCount();
           }
         });
         lines.forEach((line) => observer.observe(line));
+      })();
+
+      // Епіграф стоїть біля правого краю, рядки в ньому вирівняні ліворуч. Коли рядок епіграфа не вміщається
+      // і переноситься («Весела Оболонь» на телефоні), браузер лишає блок на всю доступну ширину — і текст
+      // відходить від правого краю. Тут ширина тексту стискається до найдовшого рядка (без JS — як було).
+      (() => {
+        const items = [...document.querySelectorAll('.epigraph p:not(.epigraph-source)')];
+        if (!items.length) return;
+        const range = document.createRange();
+        const fit = () => {
+          items.forEach((p) => (p.style.width = ''));
+          const widths = items.map((p) => {
+            range.selectNodeContents(p);
+            const rights = [...range.getClientRects()].filter((r) => r.width > 0).map((r) => r.right);
+            return rights.length ? Math.ceil(Math.max(...rights) - p.getBoundingClientRect().left) : 0;
+          });
+          items.forEach((p, i) => {
+            if (widths[i] && widths[i] < p.getBoundingClientRect().width - 1) p.style.width = `${widths[i] + 1}px`;
+          });
+        };
+        fit();
+        document.fonts?.ready.then(fit);
+        let frame = 0;
+        addEventListener('resize', () => {
+          cancelAnimationFrame(frame);
+          frame = requestAnimationFrame(fit);
+        });
       })();
     </script>
     <!-- Лічильник відвідувань (GoatCounter); на localhost і при попередньому перегляді не рахує. -->
