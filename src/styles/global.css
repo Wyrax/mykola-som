@@ -531,6 +531,12 @@ hr::after,
   text-indent: 1.5em;
 }
 
+/* Книга з justify: true у book.yaml — абзаци за шириною, останній рядок абзацу ліворуч. Лише прямі
+   абзаци прози: вставки віршів (.verse), цитати, підписи й рядки праворуч вирівнюються, як і раніше. */
+.prose--justify > p:not(.text-right) {
+  text-align: justify;
+}
+
 .prose--center p,
 .prose .signature p {
   text-indent: 0;

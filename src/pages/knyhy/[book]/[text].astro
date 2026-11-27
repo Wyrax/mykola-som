@@ -59,7 +59,7 @@ const shareImage = await coverShareImage(book, Astro.site);
           <TextSignature author={data.author} date={data.date} place={data.place} />
         </Poem>
       ) : (
-        <Prose html={text.rendered?.html ?? ''}>
+        <Prose html={text.rendered?.html ?? ''} justify={book.data.justify}>
           <TextSignature author={data.author} date={data.date} place={data.place} />
         </Prose>
       )

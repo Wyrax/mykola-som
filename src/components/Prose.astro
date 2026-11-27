@@ -4,12 +4,14 @@ import { transformVerseBlocks } from '../lib/verse';
 interface Props {
   /** Готовий HTML тексту (entry.rendered.html). */
   html: string;
+  /** Абзаци вирівняні за шириною (book.yaml: justify: true). */
+  justify?: boolean;
 }
 
 const html = transformVerseBlocks(Astro.props.html);
 ---
 
-<div class="prose">
+<div class:list={['prose', { 'prose--justify': Astro.props.justify }]}>
   <Fragment set:html={html} />
   <slot />
 </div>
